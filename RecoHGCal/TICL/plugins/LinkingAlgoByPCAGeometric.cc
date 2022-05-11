@@ -435,8 +435,8 @@ void LinkingAlgoByPCAGeometric::linkTracksters(const edm::Handle<std::vector<rec
       // compatible if accumulated energy does not 
       // exceed track momentum by more than threshold
       double threshold = std::min(0.2*ts.raw_energy(), 10.0);
-      if (!(total_raw_energy + ts.raw_energy() < tk.p() + threshold))
-      std::cout << "track p : " << tk.p() << " trackster energy : " << ts.raw_energy() << std::endl;
+      /*if (!(total_raw_energy + ts.raw_energy() < tk.p() + threshold))
+      std::cout << "track p : " << tk.p() << " trackster energy : " << ts.raw_energy() << std::endl;*/
       return (total_raw_energy + ts.raw_energy() < tk.p() + threshold); 
     };
     auto timeCompatible = [&](const Trackster & ts, const reco::TrackRef tk) -> bool {
@@ -450,8 +450,8 @@ void LinkingAlgoByPCAGeometric::linkTracksters(const edm::Handle<std::vector<rec
       double tkTErr = tkTimeErr[tk];
 
       if (tsT == -99. or tkTimeQual[tk] < tkTimeQualThreshold) return true;
-      if (!(std::abs(tsT - tkT) < maxDeltaT * sqrt(tsTErr * tsTErr + tkTErr * tkTErr)))
-      std::cout << "track time : " << tkT << " trackster time : " << tsT << std::endl;
+      /*if (!(std::abs(tsT - tkT) < maxDeltaT * sqrt(tsTErr * tsTErr + tkTErr * tkTErr)))
+      std::cout << "track time : " << tkT << " trackster time : " << tsT << std::endl;*/
       return (std::abs(tsT - tkT) < maxDeltaT * sqrt(tsTErr * tsTErr + tkTErr * tkTErr));
     };
     auto tkRef = reco::TrackRef(tkH, i);

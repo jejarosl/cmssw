@@ -18,6 +18,7 @@
 #include "DataFormats/HGCalReco/interface/TICLLayerTile.h"
 #include "DataFormats/HGCalReco/interface/Trackster.h"
 #include "DataFormats/HGCalReco/interface/TICLSeedingRegion.h"
+#include "DataFormats/HGCalReco/interface/TICLGraph.h"
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/MuonReco/interface/Muon.h"
 #include "DataFormats/GeometrySurface/interface/BoundDisk.h"
@@ -97,6 +98,7 @@ private:
   const edm::EDGetTokenT<std::vector<Trackster>> tracksterstrk_token_;
   const edm::EDGetTokenT<std::vector<Trackster>> trackstershad_token_;
   const edm::EDGetTokenT<std::vector<Trackster>> tracksters_clue3d_token_;
+  const edm::EDGetTokenT<TICLGraph> ticlGraph_token_;
   const edm::EDGetTokenT<std::vector<TICLSeedingRegion>> seedingTrk_token_;
   const edm::EDGetTokenT<std::vector<reco::CaloCluster>> clusters_token_;
   const edm::EDGetTokenT<edm::ValueMap<std::pair<float, float>>> clustersTime_token_;
@@ -165,6 +167,7 @@ TrackstersMergeProducer::TrackstersMergeProducer(const edm::ParameterSet &ps)
       tracksterstrk_token_(consumes<std::vector<Trackster>>(ps.getParameter<edm::InputTag>("tracksterstrk"))),
       trackstershad_token_(consumes<std::vector<Trackster>>(ps.getParameter<edm::InputTag>("trackstershad"))),
       tracksters_clue3d_token_(consumes<std::vector<Trackster>>(ps.getParameter<edm::InputTag>("trackstersclue3d"))),
+      ticlGraph_token_(consumes<TICLGraph>(ps.getParameter<edm::InputTag>("ticlgraph"))),
       seedingTrk_token_(consumes<std::vector<TICLSeedingRegion>>(ps.getParameter<edm::InputTag>("seedingTrk"))),
       clusters_token_(consumes<std::vector<reco::CaloCluster>>(ps.getParameter<edm::InputTag>("layer_clusters"))),
       clustersTime_token_(
@@ -339,6 +342,10 @@ void TrackstersMergeProducer::produce(edm::Event &evt, const edm::EventSetup &es
     edm::Handle<std::vector<Trackster>> trackstersclue3d_h;
     evt.getByToken(tracksters_clue3d_token_, trackstersclue3d_h);
 
+    edm::Handle<TICLGraph> ticlGraph_h;
+    evt.getByToken(ticlGraph_token_, ticlGraph_h);
+    const auto &ticlGraph = *ticlGraph_h;
+
     edm::Handle<std::vector<reco::Muon>> muons_h;
     evt.getByToken(muons_token_, muons_h);
     const auto &muons = *muons_h;
@@ -361,7 +368,12 @@ void TrackstersMergeProducer::produce(edm::Event &evt, const edm::EventSetup &es
     // Print debug info
     if (debug_) {
       std::cout << "No. of Tracks : " << tracks.size() << std::endl;
-      std::cout << "No. of Tracksters : " << (*trackstersclue3d_h).size() << std::endl;
+      const auto &tss = *trackstersclue3d_h;
+      std::cout << "No. of Tracksters : " << tss.size() << std::endl;
+      std::cout << "Trackster id  |   x   |   y   |   z   |   eta   |   phi   |   E   " << std::endl;
+      for (unsigned i = 0; i < tss.size(); ++i)
+      std::cout << "      " << i << "       " << tss[i].barycenter().x() << " " << tss[i].barycenter().y() << " " << tss[i].barycenter().z() << " " <<
+      tss[i].barycenter().eta() << " " << tss[i].barycenter().phi() << "  " << tss[i].raw_energy() << std::endl; 
     }
     std::vector<TICLCandidate> &tracksterLinkingDebug = *resultTrackstersLinked;
     for (auto cand : tracksterLinkingDebug) {
@@ -379,7 +391,7 @@ void TrackstersMergeProducer::produce(edm::Event &evt, const edm::EventSetup &es
       for (auto ts_ptr : trackster_ptrs) {
         if (debug_) {
           auto ts_idx = ts_ptr.get() - (edm::Ptr<ticl::Trackster>(trackstersclue3d_h, 0)).get();
-          std::cout << ts_idx << " (" << ts_ptr->raw_energy() << ")";
+          std::cout << ts_idx << " ";
         }
         auto &thisTrackster = *ts_ptr;
         updated_size += thisTrackster.vertices().size();
@@ -438,6 +450,20 @@ void TrackstersMergeProducer::produce(edm::Event &evt, const edm::EventSetup &es
 
     // Compute timing
     assignTimeToCandidates(*resultCandidates);
+
+    if (debug_) {
+      // print info from graph
+      std::cout << "From graph:" << std::endl;
+      const auto nodes = ticlGraph.getNodes();
+      for (const auto &n : nodes) {
+        std::cout << "Trackster : " << n.getId() << std::endl;
+        std::cout << "inners : ";
+        for (auto &inner : n.getInner()) std::cout << (int)inner << " ";
+        std::cout << std::endl << "outers : ";
+        for (auto &outer : n.getOuter()) std::cout << (int)outer << " ";
+        std::cout << std::endl;
+      }
+    }
 
     evt.put(std::move(resultTrackstersMerged));
     evt.put(std::move(resultTrackstersLinked));
@@ -971,6 +997,7 @@ void TrackstersMergeProducer::fillDescriptions(edm::ConfigurationDescriptions &d
   desc.add<edm::InputTag>("tracksterstrk", edm::InputTag("ticlTrackstersTrk"));
   desc.add<edm::InputTag>("trackstershad", edm::InputTag("ticlTrackstersHAD"));
   desc.add<edm::InputTag>("trackstersclue3d", edm::InputTag("ticlTrackstersCLUE3DHigh"));
+  desc.add<edm::InputTag>("ticlgraph", edm::InputTag("ticlGraph"));
   desc.add<edm::InputTag>("seedingTrk", edm::InputTag("ticlSeedingTrk"));
   desc.add<edm::InputTag>("layer_clusters", edm::InputTag("hgcalLayerClusters"));
   desc.add<edm::InputTag>("layer_clustersTime", edm::InputTag("hgcalLayerClusters", "timeLayerCluster"));
