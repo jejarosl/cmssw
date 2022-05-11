@@ -15,6 +15,7 @@
 #include "DataFormats/HGCalReco/interface/Common.h"
 #include "DataFormats/HGCalReco/interface/TICLLayerTile.h"
 #include "DataFormats/HGCalReco/interface/Trackster.h"
+#include "DataFormats/HGCalReco/interface/TICLGraph.h"
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/MuonReco/interface/Muon.h"
 #include "DataFormats/GeometrySurface/interface/BoundDisk.h"
@@ -82,6 +83,7 @@ private:
   std::unique_ptr<LinkingAlgoBase> linkingAlgo_;
 
   const edm::EDGetTokenT<std::vector<Trackster>> tracksters_clue3d_token_;
+  const edm::EDGetTokenT<TICLGraph> ticlGraph_token_;
   const edm::EDGetTokenT<std::vector<reco::CaloCluster>> clusters_token_;
   const edm::EDGetTokenT<edm::ValueMap<std::pair<float, float>>> clustersTime_token_;
   const edm::EDGetTokenT<std::vector<reco::Track>> tracks_token_;
@@ -138,6 +140,7 @@ private:
 
 TrackstersMergeProducer::TrackstersMergeProducer(const edm::ParameterSet &ps)
     : tracksters_clue3d_token_(consumes<std::vector<Trackster>>(ps.getParameter<edm::InputTag>("trackstersclue3d"))),
+      ticlGraph_token_(consumes<TICLGraph>(ps.getParameter<edm::InputTag>("ticlgraph"))),
       clusters_token_(consumes<std::vector<reco::CaloCluster>>(ps.getParameter<edm::InputTag>("layer_clusters"))),
       clustersTime_token_(
           consumes<edm::ValueMap<std::pair<float, float>>>(ps.getParameter<edm::InputTag>("layer_clustersTime"))),
@@ -310,6 +313,10 @@ void TrackstersMergeProducer::produce(edm::Event &evt, const edm::EventSetup &es
                 std::end(thisTrackster.vertex_multiplicity()),
                 std::back_inserter(outTrackster.vertex_multiplicity()));
     }
+    edm::Handle<TICLGraph> ticlGraph_h;
+    evt.getByToken(ticlGraph_token_, ticlGraph_h);
+    const auto &ticlGraph = *ticlGraph_h;
+
 
     LogDebug("TrackstersMergeProducer") << std::endl;
 
@@ -586,6 +593,7 @@ void TrackstersMergeProducer::fillDescriptions(edm::ConfigurationDescriptions &d
   desc.add<edm::ParameterSetDescription>("linkingPSet", linkingDesc);
 
   desc.add<edm::InputTag>("trackstersclue3d", edm::InputTag("ticlTrackstersCLUE3DHigh"));
+  desc.add<edm::InputTag>("ticlgraph", edm::InputTag("ticlGraph"));
   desc.add<edm::InputTag>("layer_clusters", edm::InputTag("hgcalLayerClusters"));
   desc.add<edm::InputTag>("layer_clustersTime", edm::InputTag("hgcalLayerClusters", "timeLayerCluster"));
   desc.add<edm::InputTag>("tracks", edm::InputTag("generalTracks"));
