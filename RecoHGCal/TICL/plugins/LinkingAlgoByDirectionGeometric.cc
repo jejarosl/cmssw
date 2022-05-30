@@ -113,7 +113,6 @@ void LinkingAlgoByDirectionGeometric::findTrackstersInWindow(
         }
       }
     }
-
     // sort tracksters found in ascending order of their distances from the seed
     std::vector<unsigned> indices(in_delta.size());
     std::iota(indices.begin(), indices.end(), 0);

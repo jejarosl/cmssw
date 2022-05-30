@@ -138,7 +138,6 @@ void TrackstersMergeProducerV3::fillTile(TICLTracksterTiles &tracksterTile,
                                           << tracksterTile[tracksterIteration].etaBin(t.barycenter().eta()) << ", "
                                           << tracksterTile[tracksterIteration].phiBin(t.barycenter().phi())
                                           << "] for iteration: " << tracksterIteration << std::endl;
-
     tracksterId++;
   }
 }
