@@ -20,7 +20,7 @@ TICL_RECO = cms.PSet(
        'keep *_ticlTrackstersHFNoseHAD_*_*',
        'keep *_ticlTrackstersHFNoseMerge_*_*',] +
       ['keep *_pfTICL_*_*'] +
-      ['keep *_layerClusterSimClusterAssociationProducer_*_*','keep *_layerClusterCaloParticleAssociationProducer_*_*']
+      ['keep *_layerClusterSimClusterAssociationProducer_*_*','keep *_layerClusterCaloParticleAssociationProducer_*_*', 'keep *_layerClusterSimTracksterAssociationProducer_*_*']
 
       )
     )
@@ -49,6 +49,7 @@ def customiseHGCalOnlyEventContent(process):
                                             'keep SimVertexs_g4SimHits_*_*',
                                             'keep *_layerClusterSimClusterAssociationProducer_*_*',
                                             'keep *_layerClusterCaloParticleAssociationProducer_*_*',
+                                            'keep *_layerClusterSimTracksterAssociationProducer_*_*'
                                             ])
 
     if hasattr(process, 'FEVTDEBUGEventContent'):
