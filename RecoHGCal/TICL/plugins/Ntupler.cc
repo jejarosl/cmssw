@@ -407,6 +407,7 @@ void Ntupler::clearVariables() {
   trackster_vertices_energy.clear();
   trackster_vertices_correctedEnergy.clear();
   trackster_vertices_correctedEnergyUncertainty.clear();
+	trackster_vertices_multiplicity.clear();
   layer_cluster_seed.clear();
 
   stsSC_trackster_time.clear();
@@ -449,6 +450,7 @@ void Ntupler::clearVariables() {
   stsSC_trackster_vertices_energy.clear();
   stsSC_trackster_vertices_correctedEnergy.clear();
   stsSC_trackster_vertices_correctedEnergyUncertainty.clear();
+	stsSC_trackster_vertices_multiplicity.clear();
   stsSC_layer_cluster_seed.clear();
 
   stsCP_trackster_time.clear();
@@ -492,7 +494,7 @@ void Ntupler::clearVariables() {
   stsCP_trackster_vertices_correctedEnergy.clear();
   stsCP_trackster_vertices_correctedEnergyUncertainty.clear();
   stsCP_layer_cluster_seed.clear();
-
+	stsCP_trackster_vertices_multiplicity.clear();
   node_linked_inners.clear();
   node_linked_outers.clear();
   isRootTrackster.clear();
@@ -550,7 +552,7 @@ void Ntupler::clearVariables() {
   tracksters_merged_vertices_energy.clear();
   tracksters_merged_vertices_correctedEnergy.clear();
   tracksters_merged_vertices_correctedEnergyUncertainty.clear();
-
+	tracksters_merged_vertices_multiplicity.clear();
   trackstersCLUE3D_recoToSim_SC.clear();
   trackstersCLUE3D_recoToSim_SC_score.clear();
   trackstersCLUE3D_simToReco_SC.clear();
