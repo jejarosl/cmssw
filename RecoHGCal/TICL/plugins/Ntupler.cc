@@ -147,7 +147,7 @@ private:
   std::vector<float_t> trackster_barycenter_eta;
   std::vector<float_t> trackster_barycenter_phi;
   std::vector<std::vector<float_t>> trackster_id_probabilities;
-  std::vector<std::vector<uint16_t> > trackster_vertices_indexes;
+  std::vector<std::vector<uint32_t> > trackster_vertices_indexes;
   std::vector<std::vector<float_t> > trackster_vertices_x;
   std::vector<std::vector<float_t> > trackster_vertices_y;
   std::vector<std::vector<float_t> > trackster_vertices_z;
@@ -188,7 +188,7 @@ private:
   std::vector<float_t> stsSC_boundaryPy;
   std::vector<float_t> stsSC_boundaryPz;
   std::vector<std::vector<float_t>> stsSC_trackster_id_probabilities;
-  std::vector<std::vector<uint16_t> > stsSC_trackster_vertices_indexes;
+  std::vector<std::vector<uint32_t> > stsSC_trackster_vertices_indexes;
   std::vector<std::vector<float_t> > stsSC_trackster_vertices_x;
   std::vector<std::vector<float_t> > stsSC_trackster_vertices_y;
   std::vector<std::vector<float_t> > stsSC_trackster_vertices_z;
@@ -229,7 +229,7 @@ private:
   std::vector<float_t> stsCP_boundaryPy;
   std::vector<float_t> stsCP_boundaryPz;
   std::vector<std::vector<float_t>> stsCP_trackster_id_probabilities;
-  std::vector<std::vector<uint16_t> > stsCP_trackster_vertices_indexes;
+  std::vector<std::vector<uint32_t> > stsCP_trackster_vertices_indexes;
   std::vector<std::vector<float_t> > stsCP_trackster_vertices_x;
   std::vector<std::vector<float_t> > stsCP_trackster_vertices_y;
   std::vector<std::vector<float_t> > stsCP_trackster_vertices_z;
@@ -246,8 +246,8 @@ private:
   std::vector<int> stsCP_layer_cluster_seed;
   
   // from TICLGraph
-  std::vector<std::vector<uint16_t>> node_linked_inners;
-  std::vector<std::vector<uint16_t>> node_linked_outers;
+  std::vector<std::vector<uint32_t>> node_linked_inners;
+  std::vector<std::vector<uint32_t>> node_linked_outers;
   std::vector<bool> isRootTrackster;
 
   // from TICLCandidate, product of linking
@@ -261,8 +261,8 @@ private:
   std::vector<float_t> candidate_time;
   std::vector<float_t> candidate_time_err;
   std::vector<std::vector<float_t>> candidate_id_probabilities;
-  std::vector<std::vector<uint16_t>> tracksters_in_candidate;
-  std::vector<uint16_t> track_in_candidate;
+  std::vector<std::vector<uint32_t>> tracksters_in_candidate;
+  std::vector<uint32_t> track_in_candidate;
 
   // merged tracksters
   size_t nTrackstersMerged;
@@ -287,7 +287,7 @@ private:
   std::vector<float_t> tracksters_merged_sigmaPCA1;
   std::vector<float_t> tracksters_merged_sigmaPCA2;
   std::vector<float_t> tracksters_merged_sigmaPCA3;
-  std::vector<std::vector<uint16_t> > tracksters_merged_vertices_indexes;
+  std::vector<std::vector<uint32_t> > tracksters_merged_vertices_indexes;
   std::vector<std::vector<float_t> > tracksters_merged_vertices_x;
   std::vector<std::vector<float_t> > tracksters_merged_vertices_y;
   std::vector<std::vector<float_t> > tracksters_merged_vertices_z;
@@ -300,27 +300,27 @@ private:
   std::vector<std::vector<float_t>> tracksters_merged_id_probabilities;
 
   // associations
-  std::vector<std::vector<uint16_t>> trackstersCLUE3D_recoToSim_SC;
+  std::vector<std::vector<uint32_t>> trackstersCLUE3D_recoToSim_SC;
   std::vector<std::vector<float_t>> trackstersCLUE3D_recoToSim_SC_score;
-  std::vector<std::vector<uint16_t>> trackstersCLUE3D_simToReco_SC;
+  std::vector<std::vector<uint32_t>> trackstersCLUE3D_simToReco_SC;
   std::vector<std::vector<float_t>> trackstersCLUE3D_simToReco_SC_score;
   std::vector<std::vector<float_t>> trackstersCLUE3D_simToReco_SC_sharedE;
 
-  std::vector<std::vector<uint16_t>> trackstersCLUE3D_recoToSim_CP;
+  std::vector<std::vector<uint32_t>> trackstersCLUE3D_recoToSim_CP;
   std::vector<std::vector<float_t>> trackstersCLUE3D_recoToSim_CP_score;
-  std::vector<std::vector<uint16_t>> trackstersCLUE3D_simToReco_CP;
+  std::vector<std::vector<uint32_t>> trackstersCLUE3D_simToReco_CP;
   std::vector<std::vector<float_t>> trackstersCLUE3D_simToReco_CP_score;
   std::vector<std::vector<float_t>> trackstersCLUE3D_simToReco_CP_sharedE;
 
-  std::vector<std::vector<uint16_t>> MergeTracksters_recoToSim_SC;
+  std::vector<std::vector<uint32_t>> MergeTracksters_recoToSim_SC;
   std::vector<std::vector<float_t>> MergeTracksters_recoToSim_SC_score;
-  std::vector<std::vector<uint16_t>> MergeTracksters_simToReco_SC;
+  std::vector<std::vector<uint32_t>> MergeTracksters_simToReco_SC;
   std::vector<std::vector<float_t>> MergeTracksters_simToReco_SC_score;
   std::vector<std::vector<float_t>> MergeTracksters_simToReco_SC_sharedE;
 
-  std::vector<std::vector<uint16_t>> MergeTracksters_recoToSim_CP;
+  std::vector<std::vector<uint32_t>> MergeTracksters_recoToSim_CP;
   std::vector<std::vector<float_t>> MergeTracksters_recoToSim_CP_score;
-  std::vector<std::vector<uint16_t>> MergeTracksters_simToReco_CP;
+  std::vector<std::vector<uint32_t>> MergeTracksters_simToReco_CP;
   std::vector<std::vector<float_t>> MergeTracksters_simToReco_CP_score;
   std::vector<std::vector<float_t>> MergeTracksters_simToReco_CP_sharedE;
 
@@ -1104,7 +1104,7 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
     trackster_id_probabilities.push_back(id_probs);
     
     // Clusters
-    std::vector<uint16_t> vertices_indexes;
+    std::vector<uint32_t> vertices_indexes;
     std::vector<float_t> vertices_x;
     std::vector<float_t> vertices_y;
     std::vector<float_t> vertices_z;
@@ -1199,7 +1199,7 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
     stsSC_trackster_id_probabilities.push_back(id_probs);
     
     // Clusters
-    std::vector<uint16_t> vertices_indexes;
+    std::vector<uint32_t> vertices_indexes;
     std::vector<float_t> vertices_x;
     std::vector<float_t> vertices_y;
     std::vector<float_t> vertices_z;
@@ -1293,7 +1293,7 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
     stsCP_trackster_id_probabilities.push_back(id_probs);
     
     // Clusters
-    std::vector<uint16_t> vertices_indexes;
+    std::vector<uint32_t> vertices_indexes;
     std::vector<float_t> vertices_x;
     std::vector<float_t> vertices_y;
     std::vector<float_t> vertices_z;
@@ -1411,14 +1411,14 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
     }
     
     if (track_ptr.isNull()) continue;
-    uint16_t tk_idx = track_ptr.get() - (edm::Ptr<reco::Track>(tracks_h, 0)).get();
+    uint32_t tk_idx = track_ptr.get() - (edm::Ptr<reco::Track>(tracks_h, 0)).get();
     track_in_candidate[i] = tk_idx;
     if(mask_tracks[tk_idx] == false){
       std::cout << "SOMETHING WRONG "<< std::endl;
     }
   }
 
-  std::vector<uint16_t> vertices_indexes;
+  std::vector<uint32_t> vertices_indexes;
   std::vector<float_t> vertices_x;
   std::vector<float_t> vertices_y;
   std::vector<float_t> vertices_z;
