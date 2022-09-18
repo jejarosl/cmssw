@@ -20,6 +20,7 @@
 #include "DataFormats/MuonReco/interface/Muon.h"
 #include "DataFormats/GeometrySurface/interface/BoundDisk.h"
 #include "DataFormats/HGCalReco/interface/TICLCandidate.h"
+#include "DataFormats/HGCalReco/interface/TICLGraph.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "DataFormats/Math/interface/Vector3D.h"
 
@@ -70,6 +71,7 @@ public:
 private:
   typedef ticl::Trackster::IterationIndex TracksterIterIndex;
   typedef math::XYZVector Vector;
+  typedef std::vector<double> Vec;
 
   void fillTile(TICLTracksterTiles &, const std::vector<Trackster> &, TracksterIterIndex);
 
@@ -184,6 +186,15 @@ TrackstersMergeProducer::TrackstersMergeProducer(const edm::ParameterSet &ps)
       eidSession_(nullptr) {
   produces<std::vector<Trackster>>();
   produces<std::vector<TICLCandidate>>();
+  produces<std::vector<bool>>("maskTracks");
+  produces<std::vector<double>>("hgcaltracksX");
+  produces<std::vector<double>>("hgcaltracksY");
+  produces<std::vector<double>>("hgcaltracksZ");
+  produces<std::vector<double>>("hgcaltracksEta"); 
+  produces<std::vector<double>>("hgcaltracksPhi"); 
+  produces<std::vector<double>>("hgcaltracksPx");  
+  produces<std::vector<double>>("hgcaltracksPy");  
+  produces<std::vector<double>>("hgcaltracksPz");  
 
   std::string detectorName_ = (detector_ == "HFNose") ? "HGCalHFNoseSensitive" : "HGCalEESensitive";
   hdc_token_ =
@@ -257,6 +268,16 @@ void TrackstersMergeProducer::produce(edm::Event &evt, const edm::EventSetup &es
   edm::Handle<std::vector<Trackster>> trackstersclue3d_h;
   evt.getByToken(tracksters_clue3d_token_, trackstersclue3d_h);
 
+  auto masked_tracks = std::make_unique<std::vector<bool>>();
+  auto hgcaltracks_x = std::make_unique<std::vector<double>>();
+  auto hgcaltracks_y = std::make_unique<std::vector<double>>();
+  auto hgcaltracks_z = std::make_unique<std::vector<double>>();
+  auto hgcaltracks_eta = std::make_unique<std::vector<double>>();
+  auto hgcaltracks_phi = std::make_unique<std::vector<double>>();
+  auto hgcaltracks_px = std::make_unique<std::vector<double>>();
+  auto hgcaltracks_py = std::make_unique<std::vector<double>>();
+  auto hgcaltracks_pz = std::make_unique<std::vector<double>>();
+
   edm::Handle<std::vector<reco::Track>> track_h;
   evt.getByToken(tracks_token_, track_h);
   const auto &tracks = *track_h;
@@ -268,10 +289,13 @@ void TrackstersMergeProducer::produce(edm::Event &evt, const edm::EventSetup &es
   const auto &trackTimeErr = evt.get(tracks_time_err_token_);
   const auto &trackTimeQual = evt.get(tracks_time_quality_token_);
 
+  edm::Handle<TICLGraph> ticlGraph_h;
+  evt.getByToken(ticlGraph_token_, ticlGraph_h);
+  const auto &ticlGraph = *ticlGraph_h;
   // Linking
+  masked_tracks->resize(tracks.size(), false);
   linkingAlgo_->linkTracksters(
-      track_h, trackTime, trackTimeErr, trackTimeQual, muons, trackstersclue3d_h, *resultCandidates, *resultFromTracks);
-
+      track_h, trackTime, trackTimeErr, trackTimeQual, muons, trackstersclue3d_h, *resultCandidates,*resultFromTracks, *hgcaltracks_x,*hgcaltracks_y,*hgcaltracks_z,*hgcaltracks_eta,*hgcaltracks_phi,*hgcaltracks_px,*hgcaltracks_py,*hgcaltracks_pz,*masked_tracks);
   // Print debug info
   LogDebug("TrackstersMergeProducer") << "Results from the linking step : " << std::endl
                                       << "No. of Tracks : " << tracks.size()
@@ -409,6 +433,15 @@ void TrackstersMergeProducer::produce(edm::Event &evt, const edm::EventSetup &es
 
   evt.put(std::move(resultTrackstersMerged));
   evt.put(std::move(resultCandidates));
+  evt.put(std::move(hgcaltracks_x),"hgcaltracksX");
+  evt.put(std::move(hgcaltracks_y),"hgcaltracksY");
+  evt.put(std::move(hgcaltracks_z),"hgcaltracksZ");
+  evt.put(std::move(hgcaltracks_eta),"hgcaltracksEta");
+  evt.put(std::move(hgcaltracks_phi),"hgcaltracksPhi");
+  evt.put(std::move(hgcaltracks_px), "hgcaltracksPx");
+  evt.put(std::move(hgcaltracks_py), "hgcaltracksPy");
+  evt.put(std::move(hgcaltracks_pz), "hgcaltracksPz");
+  evt.put(std::move(masked_tracks), "maskTracks");
 }
 
 void TrackstersMergeProducer::energyRegressionAndID(const std::vector<reco::CaloCluster> &layerClusters,
