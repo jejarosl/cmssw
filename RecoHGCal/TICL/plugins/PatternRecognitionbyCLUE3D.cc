@@ -320,6 +320,7 @@ void PatternRecognitionbyCLUE3D<TILES>::makeTracksters(
       auto &lcs = input.layerClusters;
       auto lc_seed = lcs[layerClusterIndex].seed();
       clustersType[layerClusterIndex] = ticl::returnIndex(lc_seed, rhtools_);
+		}
     for (unsigned int lc = 0; lc < thisLayer.x.size(); ++lc) {
       if (PatternRecognitionAlgoBaseT<TILES>::algo_verbosity_ > VerbosityLevel::Advanced) {
         edm::LogVerbatim("PatternRecognitionbyCLUE3D") << "Trackster " << thisLayer.clusterIndex[lc];
