@@ -302,24 +302,28 @@ private:
   // associations
   std::vector<std::vector<uint32_t>> trackstersCLUE3D_recoToSim_SC;
   std::vector<std::vector<float_t>> trackstersCLUE3D_recoToSim_SC_score;
+  std::vector<std::vector<float_t>> trackstersCLUE3D_recoToSim_SC_sharedE;
   std::vector<std::vector<uint32_t>> trackstersCLUE3D_simToReco_SC;
   std::vector<std::vector<float_t>> trackstersCLUE3D_simToReco_SC_score;
   std::vector<std::vector<float_t>> trackstersCLUE3D_simToReco_SC_sharedE;
 
   std::vector<std::vector<uint32_t>> trackstersCLUE3D_recoToSim_CP;
   std::vector<std::vector<float_t>> trackstersCLUE3D_recoToSim_CP_score;
+  std::vector<std::vector<float_t>> trackstersCLUE3D_recoToSim_CP_sharedE;
   std::vector<std::vector<uint32_t>> trackstersCLUE3D_simToReco_CP;
   std::vector<std::vector<float_t>> trackstersCLUE3D_simToReco_CP_score;
   std::vector<std::vector<float_t>> trackstersCLUE3D_simToReco_CP_sharedE;
 
   std::vector<std::vector<uint32_t>> MergeTracksters_recoToSim_SC;
   std::vector<std::vector<float_t>> MergeTracksters_recoToSim_SC_score;
+  std::vector<std::vector<float_t>> MergeTracksters_recoToSim_SC_sharedE;
   std::vector<std::vector<uint32_t>> MergeTracksters_simToReco_SC;
   std::vector<std::vector<float_t>> MergeTracksters_simToReco_SC_score;
   std::vector<std::vector<float_t>> MergeTracksters_simToReco_SC_sharedE;
 
   std::vector<std::vector<uint32_t>> MergeTracksters_recoToSim_CP;
   std::vector<std::vector<float_t>> MergeTracksters_recoToSim_CP_score;
+  std::vector<std::vector<float_t>> MergeTracksters_recoToSim_CP_sharedE;
   std::vector<std::vector<uint32_t>> MergeTracksters_simToReco_CP;
   std::vector<std::vector<float_t>> MergeTracksters_simToReco_CP_score;
   std::vector<std::vector<float_t>> MergeTracksters_simToReco_CP_sharedE;
@@ -553,26 +557,31 @@ void Ntupler::clearVariables() {
   tracksters_merged_vertices_correctedEnergy.clear();
   tracksters_merged_vertices_correctedEnergyUncertainty.clear();
 	tracksters_merged_vertices_multiplicity.clear();
-  trackstersCLUE3D_recoToSim_SC.clear();
+  
+	trackstersCLUE3D_recoToSim_SC.clear();
   trackstersCLUE3D_recoToSim_SC_score.clear();
+  trackstersCLUE3D_recoToSim_SC_sharedE.clear();
   trackstersCLUE3D_simToReco_SC.clear();
   trackstersCLUE3D_simToReco_SC_score.clear();
   trackstersCLUE3D_simToReco_SC_sharedE.clear();
 
   trackstersCLUE3D_recoToSim_CP.clear();
   trackstersCLUE3D_recoToSim_CP_score.clear();
+  trackstersCLUE3D_recoToSim_CP_sharedE.clear();
   trackstersCLUE3D_simToReco_CP.clear();
   trackstersCLUE3D_simToReco_CP_score.clear();
   trackstersCLUE3D_simToReco_CP_sharedE.clear();
 
   MergeTracksters_recoToSim_SC.clear();
   MergeTracksters_recoToSim_SC_score.clear();
+  MergeTracksters_recoToSim_SC_sharedE.clear();
   MergeTracksters_simToReco_SC.clear();
   MergeTracksters_simToReco_SC_score.clear();
   MergeTracksters_simToReco_SC_sharedE.clear();
 
   MergeTracksters_recoToSim_CP.clear();
   MergeTracksters_recoToSim_CP_score.clear();
+  MergeTracksters_recoToSim_CP_sharedE.clear();
   MergeTracksters_simToReco_CP.clear();
   MergeTracksters_simToReco_CP_score.clear();
   MergeTracksters_simToReco_CP_sharedE.clear();
@@ -858,24 +867,28 @@ void Ntupler::beginJob() {
 
   associations_tree_->Branch("tsCLUE3D_recoToSim_SC", &trackstersCLUE3D_recoToSim_SC);
   associations_tree_->Branch("tsCLUE3D_recoToSim_SC_score", &trackstersCLUE3D_recoToSim_SC_score);
+  associations_tree_->Branch("tsCLUE3D_recoToSim_SC_sharedE", &trackstersCLUE3D_recoToSim_SC_sharedE);
   associations_tree_->Branch("tsCLUE3D_simToReco_SC", &trackstersCLUE3D_simToReco_SC);
   associations_tree_->Branch("tsCLUE3D_simToReco_SC_score", &trackstersCLUE3D_simToReco_SC_score);
   associations_tree_->Branch("tsCLUE3D_simToReco_SC_sharedE", &trackstersCLUE3D_simToReco_SC_sharedE);
 
   associations_tree_->Branch("tsCLUE3D_recoToSim_CP", &trackstersCLUE3D_recoToSim_CP);
   associations_tree_->Branch("tsCLUE3D_recoToSim_CP_score", &trackstersCLUE3D_recoToSim_CP_score);
+  associations_tree_->Branch("tsCLUE3D_recoToSim_CP_sharedE", &trackstersCLUE3D_recoToSim_CP_sharedE);
   associations_tree_->Branch("tsCLUE3D_simToReco_CP", &trackstersCLUE3D_simToReco_CP);
   associations_tree_->Branch("tsCLUE3D_simToReco_CP_score", &trackstersCLUE3D_simToReco_CP_score);
   associations_tree_->Branch("tsCLUE3D_simToReco_CP_sharedE", &trackstersCLUE3D_simToReco_CP_sharedE);
 
   associations_tree_->Branch("Mergetstracksters_recoToSim_SC", &MergeTracksters_recoToSim_SC);
   associations_tree_->Branch("Mergetstracksters_recoToSim_SC_score", &MergeTracksters_recoToSim_SC_score);
+  associations_tree_->Branch("Mergetstracksters_recoToSim_SC_sharedE", &MergeTracksters_recoToSim_SC_sharedE);
   associations_tree_->Branch("Mergetstracksters_simToReco_SC", &MergeTracksters_simToReco_SC);
   associations_tree_->Branch("Mergetstracksters_simToReco_SC_score", &MergeTracksters_simToReco_SC_score);
   associations_tree_->Branch("Mergetstracksters_simToReco_SC_sharedE", &MergeTracksters_simToReco_SC_sharedE);
 
   associations_tree_->Branch("Mergetracksters_recoToSim_CP", &MergeTracksters_recoToSim_CP);
   associations_tree_->Branch("Mergetracksters_recoToSim_CP_score", &MergeTracksters_recoToSim_CP_score);
+  associations_tree_->Branch("Mergetracksters_recoToSim_CP_sharedE", &MergeTracksters_recoToSim_CP_sharedE);
   associations_tree_->Branch("Mergetracksters_simToReco_CP", &MergeTracksters_simToReco_CP);
   associations_tree_->Branch("Mergetracksters_simToReco_CP_score", &MergeTracksters_simToReco_CP_score);
   associations_tree_->Branch("Mergetracksters_simToReco_CP_sharedE", &MergeTracksters_simToReco_CP_sharedE);
@@ -1516,6 +1529,7 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
         trackstersCLUE3D_simToReco_SC[i].push_back(ts_idx);
         trackstersCLUE3D_simToReco_SC_score[i].push_back(ts.second.second);
         trackstersCLUE3D_simToReco_SC_sharedE[i].push_back(ts.second.first);
+        trackstersCLUE3D_recoToSim_SC_sharedE[ts_idx].push_back(ts.second.first);
       }
     }
   }
@@ -1557,6 +1571,7 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
         trackstersCLUE3D_simToReco_CP[i].push_back(ts_idx);
         trackstersCLUE3D_simToReco_CP_score[i].push_back(ts.second.second);
         trackstersCLUE3D_simToReco_CP_sharedE[i].push_back(ts.second.first);
+        trackstersCLUE3D_recoToSim_CP_sharedE[ts_idx].push_back(ts.second.first);
       }
     }
   }
@@ -1596,6 +1611,7 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
         MergeTracksters_simToReco_SC[i].push_back(ts_idx);
         MergeTracksters_simToReco_SC_score[i].push_back(ts.second.second);
         MergeTracksters_simToReco_SC_sharedE[i].push_back(ts.second.first);
+        MergeTracksters_recoToSim_SC_sharedE[ts_idx].push_back(ts.second.first);
       }
     }
   }
@@ -1638,6 +1654,7 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
         MergeTracksters_simToReco_CP[i].push_back(ts_idx);
         MergeTracksters_simToReco_CP_score[i].push_back(ts.second.second);
         MergeTracksters_simToReco_CP_sharedE[i].push_back(ts.second.first);
+        MergeTracksters_recoToSim_CP_sharedE[ts_idx].push_back(ts.second.first);
       }
     }
   }
