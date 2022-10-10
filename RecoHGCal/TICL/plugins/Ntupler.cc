@@ -1373,6 +1373,8 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
     cluster_position_phi.push_back(cluster_iterator->phi());
     auto haf = cluster_iterator->hitsAndFractions();
     auto layerId = rhtools_.getLayerWithOffset(haf[0].first);
+    auto layerInterfaceZ = rhtools_.getPositionLayer(rhtools_.lastLayerEE()).z();
+    std::cout << layerInterfaceZ << "\n";
     cluster_layer_id.push_back(layerId);    
     uint32_t number_of_hits = cluster_iterator->hitsAndFractions().size();    
     cluster_number_of_hits.push_back(number_of_hits);  
@@ -1496,6 +1498,7 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
   // Tackster reco->sim associations
   trackstersCLUE3D_recoToSim_SC.resize(tracksters.size());
   trackstersCLUE3D_recoToSim_SC_score.resize(tracksters.size());
+  trackstersCLUE3D_recoToSim_SC_sharedE.resize(tracksters.size());
   for (size_t i = 0; i < tracksters.size(); ++i) {
     const edm::Ref<ticl::TracksterCollection> tsRef(tracksters_handle, i);
     
@@ -1506,7 +1509,8 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
       for (auto &sts : stsSCassociated) {
         auto sts_id = (sts.first).get() - (edm::Ref<ticl::TracksterCollection>(simTrackstersSC_h, 0)).get();
         trackstersCLUE3D_recoToSim_SC[i].push_back(sts_id);
-        trackstersCLUE3D_recoToSim_SC_score[i].push_back(sts.second);
+        trackstersCLUE3D_recoToSim_SC_score[i].push_back(sts.second.second);
+        trackstersCLUE3D_recoToSim_SC_sharedE[i].push_back(sts.second.first);
       }
     }
   }
@@ -1517,7 +1521,6 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
   trackstersCLUE3D_simToReco_SC.resize(nsimTrackstersSC);
   trackstersCLUE3D_simToReco_SC_score.resize(nsimTrackstersSC);
   trackstersCLUE3D_simToReco_SC_sharedE.resize(nsimTrackstersSC);
-  trackstersCLUE3D_recoToSim_SC_sharedE.resize(tracksters.size());
   for (size_t i = 0; i < nsimTrackstersSC; ++i) {
     const edm::Ref<ticl::TracksterCollection> stsSCRef(simTrackstersSC_h, i);
 
@@ -1530,7 +1533,6 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
         trackstersCLUE3D_simToReco_SC[i].push_back(ts_idx);
         trackstersCLUE3D_simToReco_SC_score[i].push_back(ts.second.second);
         trackstersCLUE3D_simToReco_SC_sharedE[i].push_back(ts.second.first);
-        trackstersCLUE3D_recoToSim_SC_sharedE[ts_idx].push_back(ts.second.first);
       }
     }
   }
@@ -1539,6 +1541,7 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
   // Tackster reco->sim associations
   trackstersCLUE3D_recoToSim_CP.resize(tracksters.size());
   trackstersCLUE3D_recoToSim_CP_score.resize(tracksters.size());
+  trackstersCLUE3D_recoToSim_CP_sharedE.resize(tracksters.size());
   for (size_t i = 0; i < tracksters.size(); ++i) {
     const edm::Ref<ticl::TracksterCollection> tsRef(tracksters_handle, i);
     
@@ -1549,7 +1552,8 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
       for (auto &sts : stsCPassociated) {
         auto sts_id = (sts.first).get() - (edm::Ref<ticl::TracksterCollection>(simTrackstersCP_h, 0)).get();
         trackstersCLUE3D_recoToSim_CP[i].push_back(sts_id);
-        trackstersCLUE3D_recoToSim_CP_score[i].push_back(sts.second);
+        trackstersCLUE3D_recoToSim_CP_score[i].push_back(sts.second.second);
+        trackstersCLUE3D_recoToSim_CP_sharedE[i].push_back(sts.second.first);
       }
     }
   } 
@@ -1560,7 +1564,6 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
   trackstersCLUE3D_simToReco_CP.resize(nsimTrackstersCP);
   trackstersCLUE3D_simToReco_CP_score.resize(nsimTrackstersCP);
   trackstersCLUE3D_simToReco_CP_sharedE.resize(nsimTrackstersCP);
-  trackstersCLUE3D_recoToSim_CP_sharedE.resize(tracksters.size());
   for (size_t i = 0; i < nsimTrackstersCP; ++i) {
     const edm::Ref<ticl::TracksterCollection> stsCPRef(simTrackstersCP_h, i);
 
@@ -1573,7 +1576,6 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
         trackstersCLUE3D_simToReco_CP[i].push_back(ts_idx);
         trackstersCLUE3D_simToReco_CP_score[i].push_back(ts.second.second);
         trackstersCLUE3D_simToReco_CP_sharedE[i].push_back(ts.second.first);
-        trackstersCLUE3D_recoToSim_CP_sharedE[ts_idx].push_back(ts.second.first);
       }
     }
   }
@@ -1581,6 +1583,7 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
   // Tackster reco->sim associations
   MergeTracksters_recoToSim_SC.resize(trackstersmerged.size());
   MergeTracksters_recoToSim_SC_score.resize(trackstersmerged.size());
+  MergeTracksters_recoToSim_SC_sharedE.resize(trackstersmerged.size());
   for (size_t i = 0; i < trackstersmerged.size(); ++i) {
     const edm::Ref<ticl::TracksterCollection> tsRef(tracksters_merged_h, i);
     
@@ -1591,7 +1594,8 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
       for (auto &sts : stsSCassociated) {
         auto sts_id = (sts.first).get() - (edm::Ref<ticl::TracksterCollection>(simTrackstersSC_h, 0)).get();
         MergeTracksters_recoToSim_SC[i].push_back(sts_id);
-        MergeTracksters_recoToSim_SC_score[i].push_back(sts.second);
+        MergeTracksters_recoToSim_SC_score[i].push_back(sts.second.second);
+        MergeTracksters_recoToSim_SC_sharedE[i].push_back(sts.second.first);
       }
     }
   }
@@ -1601,7 +1605,6 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
   MergeTracksters_simToReco_SC.resize(nsimTrackstersSC);
   MergeTracksters_simToReco_SC_score.resize(nsimTrackstersSC);
   MergeTracksters_simToReco_SC_sharedE.resize(nsimTrackstersSC);
-  MergeTracksters_recoToSim_SC_sharedE.resize(trackstersmerged.size());
   for (size_t i = 0; i < nsimTrackstersSC; ++i) {
     const edm::Ref<ticl::TracksterCollection> stsSCRef(simTrackstersSC_h, i);
 
@@ -1614,7 +1617,6 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
         MergeTracksters_simToReco_SC[i].push_back(ts_idx);
         MergeTracksters_simToReco_SC_score[i].push_back(ts.second.second);
         MergeTracksters_simToReco_SC_sharedE[i].push_back(ts.second.first);
-        MergeTracksters_recoToSim_SC_sharedE[ts_idx].push_back(ts.second.first);
       }
     }
   }
@@ -1623,6 +1625,7 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
   // Tackster reco->sim associations
   MergeTracksters_recoToSim_CP.resize(trackstersmerged.size());
   MergeTracksters_recoToSim_CP_score.resize(trackstersmerged.size());
+  MergeTracksters_recoToSim_CP_sharedE.resize(trackstersmerged.size());
   for (size_t i = 0; i < trackstersmerged.size(); ++i) {
     const edm::Ref<ticl::TracksterCollection> tsRef(tracksters_merged_h, i);
     
@@ -1633,7 +1636,8 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
       for (auto &sts : stsCPassociated) {
         auto sts_id = (sts.first).get() - (edm::Ref<ticl::TracksterCollection>(simTrackstersCP_h, 0)).get();
         MergeTracksters_recoToSim_CP[i].push_back(sts_id);
-        MergeTracksters_recoToSim_CP_score[i].push_back(sts.second);
+        MergeTracksters_recoToSim_CP_score[i].push_back(sts.second.second);
+        MergeTracksters_recoToSim_CP_sharedE[i].push_back(sts.second.first);
       }
     }
   }
@@ -1645,7 +1649,6 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
   MergeTracksters_simToReco_CP.resize(nsimTrackstersCP);
   MergeTracksters_simToReco_CP_score.resize(nsimTrackstersCP);
   MergeTracksters_simToReco_CP_sharedE.resize(nsimTrackstersCP);
-  MergeTracksters_recoToSim_CP_sharedE.resize(trackstersmerged.size());
   for (size_t i = 0; i < nsimTrackstersCP; ++i) {
     const edm::Ref<ticl::TracksterCollection> stsCPRef(simTrackstersCP_h, i);
   
@@ -1658,7 +1661,6 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
         MergeTracksters_simToReco_CP[i].push_back(ts_idx);
         MergeTracksters_simToReco_CP_score[i].push_back(ts.second.second);
         MergeTracksters_simToReco_CP_sharedE[i].push_back(ts.second.first);
-        MergeTracksters_recoToSim_CP_sharedE[ts_idx].push_back(ts.second.first);
       }
     }
   }
@@ -1739,14 +1741,14 @@ void Ntupler::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
   desc.add<edm::InputTag>("tracksterSeeds", edm::InputTag("ticlTrackstersCLUE3DHigh", "tracksterSeeds"));
   desc.add<edm::InputTag>("simtrackstersSC", edm::InputTag("ticlSimTracksters"));
   desc.add<edm::InputTag>("simtrackstersCP", edm::InputTag("ticlSimTracksters", "fromCPs"));
-  desc.add<edm::InputTag>("recoToSimAssociatorSC", edm::InputTag("tracksterSimTracksterAssociationPRbyCLUE3D"));
-  desc.add<edm::InputTag>("simToRecoAssociatorSC", edm::InputTag("tracksterSimTracksterAssociationPRbyCLUE3D"));
-  desc.add<edm::InputTag>("recoToSimAssociatorCP", edm::InputTag("tracksterSimTracksterAssociationLinkingbyCLUE3D"));
-  desc.add<edm::InputTag>("simToRecoAssociatorCP", edm::InputTag("tracksterSimTracksterAssociationLinkingbyCLUE3D"));
-  desc.add<edm::InputTag>("MergerecoToSimAssociatorSC", edm::InputTag("tracksterSimTracksterAssociationPR"));
-  desc.add<edm::InputTag>("MergesimToRecoAssociatorSC", edm::InputTag("tracksterSimTracksterAssociationPR"));
-  desc.add<edm::InputTag>("MergerecoToSimAssociatorCP", edm::InputTag("tracksterSimTracksterAssociationLinking"));
-  desc.add<edm::InputTag>("MergesimToRecoAssociatorCP", edm::InputTag("tracksterSimTracksterAssociationLinking"));
+  desc.add<edm::InputTag>("recoToSimAssociatorSC", edm::InputTag("tracksterSimTracksterAssociationPRbyCLUE3D", "recoToSim"));
+  desc.add<edm::InputTag>("simToRecoAssociatorSC", edm::InputTag("tracksterSimTracksterAssociationPRbyCLUE3D", "simToReco"));
+  desc.add<edm::InputTag>("recoToSimAssociatorCP", edm::InputTag("tracksterSimTracksterAssociationLinkingbyCLUE3D", "recoToSim"));
+  desc.add<edm::InputTag>("simToRecoAssociatorCP", edm::InputTag("tracksterSimTracksterAssociationLinkingbyCLUE3D", "simToReco"));
+  desc.add<edm::InputTag>("MergerecoToSimAssociatorSC", edm::InputTag("tracksterSimTracksterAssociationPR", "recoToSim"));
+  desc.add<edm::InputTag>("MergesimToRecoAssociatorSC", edm::InputTag("tracksterSimTracksterAssociationPR", "simToReco"));
+  desc.add<edm::InputTag>("MergerecoToSimAssociatorCP", edm::InputTag("tracksterSimTracksterAssociationLinking", "recoToSim"));
+  desc.add<edm::InputTag>("MergesimToRecoAssociatorCP", edm::InputTag("tracksterSimTracksterAssociationLinking", "simToReco"));
   desc.add<edm::InputTag>("simclusters", edm::InputTag("mix", "MergedCaloTruth"));
   desc.add<edm::InputTag>("caloparticles", edm::InputTag("mix", "MergedCaloTruth"));
   descriptions.add("ticlNtuplizer", desc);

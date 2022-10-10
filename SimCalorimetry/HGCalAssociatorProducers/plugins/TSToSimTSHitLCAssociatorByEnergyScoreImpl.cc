@@ -244,7 +244,7 @@ hgcal::RecoToSimCollectionSimTracksters TSToSimTSHitLCAssociatorByEnergyScoreImp
       // Fill AssociationMap
       returnValue.insert(edm::Ref<ticl::TracksterCollection>(tCH, tsId),  // Ref to TS
                          std::make_pair(edm::Ref<ticl::TracksterCollection>(sTCH, simTsId),
-                                        recoToSim_sharedEnergyAndScore[tsId][simTsId].second)  // Pair <Ref to ST, score>
+                                        std::make_pair(recoToSim_sharedEnergyAndScore[tsId][simTsId].first, recoToSim_sharedEnergyAndScore[tsId][simTsId].second))  // Pair <Ref to ST, score>
       );
     }
   }

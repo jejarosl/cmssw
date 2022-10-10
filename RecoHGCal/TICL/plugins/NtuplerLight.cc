@@ -1494,7 +1494,7 @@ void NtuplerLight::analyze(const edm::Event& event, const edm::EventSetup& setup
       for (auto &sts : stsSCassociated) {
         auto sts_id = (sts.first).get() - (edm::Ref<ticl::TracksterCollection>(simTrackstersSC_h, 0)).get();
         trackstersCLUE3D_recoToSim_SC[i].push_back(sts_id);
-        trackstersCLUE3D_recoToSim_SC_score[i].push_back(sts.second);
+        trackstersCLUE3D_recoToSim_SC_score[i].push_back(sts.second.second);
       }
     }
   }
@@ -1535,7 +1535,7 @@ void NtuplerLight::analyze(const edm::Event& event, const edm::EventSetup& setup
       for (auto &sts : stsCPassociated) {
         auto sts_id = (sts.first).get() - (edm::Ref<ticl::TracksterCollection>(simTrackstersCP_h, 0)).get();
         trackstersCLUE3D_recoToSim_CP[i].push_back(sts_id);
-        trackstersCLUE3D_recoToSim_CP_score[i].push_back(sts.second);
+        trackstersCLUE3D_recoToSim_CP_score[i].push_back(sts.second.second);
       }
     }
   } 
@@ -1575,7 +1575,7 @@ void NtuplerLight::analyze(const edm::Event& event, const edm::EventSetup& setup
       for (auto &sts : stsSCassociated) {
         auto sts_id = (sts.first).get() - (edm::Ref<ticl::TracksterCollection>(simTrackstersSC_h, 0)).get();
         MergeTracksters_recoToSim_SC[i].push_back(sts_id);
-        MergeTracksters_recoToSim_SC_score[i].push_back(sts.second);
+        MergeTracksters_recoToSim_SC_score[i].push_back(sts.second.second);
       }
     }
   }
@@ -1615,7 +1615,7 @@ void NtuplerLight::analyze(const edm::Event& event, const edm::EventSetup& setup
       for (auto &sts : stsCPassociated) {
         auto sts_id = (sts.first).get() - (edm::Ref<ticl::TracksterCollection>(simTrackstersCP_h, 0)).get();
         MergeTracksters_recoToSim_CP[i].push_back(sts_id);
-        MergeTracksters_recoToSim_CP_score[i].push_back(sts.second);
+        MergeTracksters_recoToSim_CP_score[i].push_back(sts.second.second);
       }
     }
   }
@@ -1719,14 +1719,14 @@ void NtuplerLight::fillDescriptions(edm::ConfigurationDescriptions& descriptions
   desc.add<edm::InputTag>("tracksterSeeds", edm::InputTag("ticlTrackstersCLUE3DHigh", "tracksterSeeds"));
   desc.add<edm::InputTag>("simtrackstersSC", edm::InputTag("ticlSimTracksters"));
   desc.add<edm::InputTag>("simtrackstersCP", edm::InputTag("ticlSimTracksters", "fromCPs"));
-  desc.add<edm::InputTag>("recoToSimAssociatorSC", edm::InputTag("tracksterSimTracksterAssociationPRbyCLUE3D"));
-  desc.add<edm::InputTag>("simToRecoAssociatorSC", edm::InputTag("tracksterSimTracksterAssociationPRbyCLUE3D"));
-  desc.add<edm::InputTag>("recoToSimAssociatorCP", edm::InputTag("tracksterSimTracksterAssociationLinkingbyCLUE3D"));
-  desc.add<edm::InputTag>("simToRecoAssociatorCP", edm::InputTag("tracksterSimTracksterAssociationLinkingbyCLUE3D"));
-  desc.add<edm::InputTag>("MergerecoToSimAssociatorSC", edm::InputTag("tracksterSimTracksterAssociationPR"));
-  desc.add<edm::InputTag>("MergesimToRecoAssociatorSC", edm::InputTag("tracksterSimTracksterAssociationPR"));
-  desc.add<edm::InputTag>("MergerecoToSimAssociatorCP", edm::InputTag("tracksterSimTracksterAssociationLinking"));
-  desc.add<edm::InputTag>("MergesimToRecoAssociatorCP", edm::InputTag("tracksterSimTracksterAssociationLinking"));
+  desc.add<edm::InputTag>("recoToSimAssociatorSC", edm::InputTag("tracksterSimTracksterAssociationPRbyCLUE3D", "recoToSim"));
+  desc.add<edm::InputTag>("simToRecoAssociatorSC", edm::InputTag("tracksterSimTracksterAssociationPRbyCLUE3D", "simToReco"));
+  desc.add<edm::InputTag>("recoToSimAssociatorCP", edm::InputTag("tracksterSimTracksterAssociationLinkingbyCLUE3D", "recoToSim"));
+  desc.add<edm::InputTag>("simToRecoAssociatorCP", edm::InputTag("tracksterSimTracksterAssociationLinkingbyCLUE3D", "simToReco"));
+  desc.add<edm::InputTag>("MergerecoToSimAssociatorSC", edm::InputTag("tracksterSimTracksterAssociationPR", "recoToSim"));
+  desc.add<edm::InputTag>("MergesimToRecoAssociatorSC", edm::InputTag("tracksterSimTracksterAssociationPR", "simToReco"));
+  desc.add<edm::InputTag>("MergerecoToSimAssociatorCP", edm::InputTag("tracksterSimTracksterAssociationLinking", "recoToSim"));
+  desc.add<edm::InputTag>("MergesimToRecoAssociatorCP", edm::InputTag("tracksterSimTracksterAssociationLinking", "simToReco"));
   desc.add<edm::InputTag>("simclusters", edm::InputTag("mix", "MergedCaloTruth"));
   desc.add<edm::InputTag>("caloparticles", edm::InputTag("mix", "MergedCaloTruth"));
   descriptions.add("ticlNtuplizerLight", desc);

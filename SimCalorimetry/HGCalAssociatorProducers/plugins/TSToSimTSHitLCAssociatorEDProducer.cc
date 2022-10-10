@@ -50,8 +50,8 @@ private:
 };
 
 TSToSimTSHitLCAssociatorEDProducer::TSToSimTSHitLCAssociatorEDProducer(const edm::ParameterSet &pset) {
-  produces<hgcal::SimToRecoCollectionSimTracksters>();
-  produces<hgcal::RecoToSimCollectionSimTracksters>();
+  produces<hgcal::SimToRecoCollectionSimTracksters>("simToReco");
+  produces<hgcal::RecoToSimCollectionSimTracksters>("recoToSim");
 
   TSCollectionToken_ = consumes<ticl::TracksterCollection>(pset.getParameter<edm::InputTag>("label_tst"));
   SimTSCollectionToken_ = consumes<ticl::TracksterCollection>(pset.getParameter<edm::InputTag>("label_simTst"));
@@ -104,8 +104,8 @@ void TSToSimTSHitLCAssociatorEDProducer::produce(edm::StreamID, edm::Event &iEve
   auto rts = std::make_unique<hgcal::RecoToSimCollectionSimTracksters>(recSimColl);
   auto str = std::make_unique<hgcal::SimToRecoCollectionSimTracksters>(simRecColl);
 
-  iEvent.put(std::move(rts));
-  iEvent.put(std::move(str));
+  iEvent.put(std::move(rts), "recoToSim");
+  iEvent.put(std::move(str), "simToReco");
 }
 
 // define this as a plug-in
