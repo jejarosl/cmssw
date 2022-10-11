@@ -1373,8 +1373,6 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
     cluster_position_phi.push_back(cluster_iterator->phi());
     auto haf = cluster_iterator->hitsAndFractions();
     auto layerId = rhtools_.getLayerWithOffset(haf[0].first);
-    auto layerInterfaceZ = rhtools_.getPositionLayer(rhtools_.lastLayerEE()).z();
-    std::cout << layerInterfaceZ << "\n";
     cluster_layer_id.push_back(layerId);    
     uint32_t number_of_hits = cluster_iterator->hitsAndFractions().size();    
     cluster_number_of_hits.push_back(number_of_hits);  
