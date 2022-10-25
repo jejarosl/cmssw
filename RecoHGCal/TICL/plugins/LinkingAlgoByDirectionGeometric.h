@@ -21,6 +21,8 @@
 
 #include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
 
+using namespace cms::Ort;
+
 namespace ticl {
   class LinkingAlgoByDirectionGeometric final : public LinkingAlgoBase {
   public:
@@ -39,7 +41,7 @@ namespace ticl {
                         const std::vector<reco::Muon> &,
                         const edm::Handle<std::vector<Trackster>>,
                         std::vector<TICLCandidate> &,
-                        std::vector<TICLCandidate> &) override;
+                        std::vector<TICLCandidate> &, const ONNXRuntime* cache) override;
 
     static void fillPSetDescription(edm::ParameterSetDescription &desc);
 
