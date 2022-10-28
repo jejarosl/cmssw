@@ -232,13 +232,14 @@ void LinkingAlgoByDirectionGeometric::linkTracksters(const edm::Handle<std::vect
                                                      const std::vector<reco::Muon> &muons,
                                                      const edm::Handle<std::vector<Trackster>> tsH,
                                                      std::vector<TICLCandidate> &resultLinked,
-                                                     std::vector<TICLCandidate> &chargedHadronsFromTk, const ONNXRuntime* cache) {
+                                                     std::vector<TICLCandidate> &chargedHadronsFromTk,
+                                                     const ONNXRuntime *cache) {
   const auto &tracks = *tkH;
   const auto &tracksters = *tsH;
 
   auto bFieldProd = bfield_.product();
   const Propagator &prop = (*propagator_);
-	std::cout << "LINKING ALGO GEOMETRIC " << std::endl;
+  std::cout << "LINKING ALGO GEOMETRIC " << std::endl;
   // propagated point collections
   // elements in the propagated points collecions are used
   // to look for potential linkages in the appropriate tiles

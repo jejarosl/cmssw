@@ -10,6 +10,4 @@ DEFINE_EDM_VALIDATED_PLUGIN(LinkingAlgoFactory,
                             ticl::LinkingAlgoByDirectionGeometric,
                             "LinkingAlgoByDirectionGeometric");
 
-DEFINE_EDM_VALIDATED_PLUGIN(LinkingAlgoFactory,
-                            ticl::LinkingAlgoByGNN,
-                            "LinkingAlgoByGNN");
+DEFINE_EDM_VALIDATED_PLUGIN(LinkingAlgoFactory, ticl::LinkingAlgoByGNN, "LinkingAlgoByGNN");

@@ -52,14 +52,14 @@ using namespace ticl;
 using namespace cms::Ort;
 class TrackstersMergeProducer : public edm::stream::EDProducer<edm::GlobalCache<ONNXRuntime>> {
 public:
-  explicit TrackstersMergeProducer(const edm::ParameterSet &ps, const ONNXRuntime*);
+  explicit TrackstersMergeProducer(const edm::ParameterSet &ps, const ONNXRuntime *);
   ~TrackstersMergeProducer() override{};
   void produce(edm::Event &, const edm::EventSetup &) override;
   static void fillDescriptions(edm::ConfigurationDescriptions &descriptions);
 
   // static methods for handling the global cache
   static std::unique_ptr<ONNXRuntime> initializeGlobalCache(const edm::ParameterSet &);
-  static void globalEndJob(const ONNXRuntime*);
+  static void globalEndJob(const ONNXRuntime *);
 
   void beginJob();
   void endJob();
@@ -136,7 +136,7 @@ private:
   edm::ESGetToken<HGCalDDDConstants, IdealGeometryRecord> hdc_token_;
 };
 
-TrackstersMergeProducer::TrackstersMergeProducer(const edm::ParameterSet &ps,const ONNXRuntime *cache)
+TrackstersMergeProducer::TrackstersMergeProducer(const edm::ParameterSet &ps, const ONNXRuntime *cache)
     : tracksters_clue3d_token_(consumes<std::vector<Trackster>>(ps.getParameter<edm::InputTag>("trackstersclue3d"))),
       clusters_token_(consumes<std::vector<reco::CaloCluster>>(ps.getParameter<edm::InputTag>("layer_clusters"))),
       clustersTime_token_(
@@ -269,11 +269,20 @@ void TrackstersMergeProducer::produce(edm::Event &evt, const edm::EventSetup &es
   const auto &trackTimeErr = evt.get(tracks_time_err_token_);
   const auto &trackTimeQual = evt.get(tracks_time_quality_token_);
 
+  //TODO: add graph and input it as an argument to the linkTracksters()
+
   // Linking
-	std::cout << " Run Links " << std::endl;
-  linkingAlgo_->linkTracksters(
-      track_h, trackTime, trackTimeErr, trackTimeQual, muons, trackstersclue3d_h, *resultCandidates, *resultFromTracks, globalCache());
-	std::cout << " Run Links " << std::endl;
+  std::cout << " Run Links " << std::endl;
+  linkingAlgo_->linkTracksters(track_h,
+                               trackTime,
+                               trackTimeErr,
+                               trackTimeQual,
+                               muons,
+                               trackstersclue3d_h,  //graph,
+                               *resultCandidates,
+                               *resultFromTracks,
+                               globalCache());
+  std::cout << " Run Links " << std::endl;
 
   // Print debug info
   LogDebug("TrackstersMergeProducer") << "Results from the linking step : " << std::endl
@@ -626,7 +635,7 @@ void TrackstersMergeProducer::fillDescriptions(edm::ConfigurationDescriptions &d
   desc.add<int>("eid_n_layers", 50);
   desc.add<int>("eid_n_clusters", 10);
   desc.add<edm::FileInPath>("model_path",
-                            edm::FileInPath("RecoHGCal/TICL/data/tf_models/model.onnx"));
+                            edm::FileInPath("RecoHGCal/TICL/data/tf_models/model_mlp_batch_1_float_inputs.onnx"));
   descriptions.add("trackstersMergeProducer", desc);
 }
 
