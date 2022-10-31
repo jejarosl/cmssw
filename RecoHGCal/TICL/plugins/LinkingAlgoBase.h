@@ -14,7 +14,9 @@
 #include "TrackingTools/GeomPropagators/interface/Propagator.h"
 #include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
 #include "Geometry/HGCalCommonData/interface/HGCalDDDConstants.h"
+#include "PhysicsTools/ONNXRuntime/interface/ONNXRuntime.h"
 
+using namespace cms::Ort;
 namespace edm {
   class Event;
   class EventSetup;
@@ -38,7 +40,9 @@ namespace ticl {
                                 const edm::ValueMap<float>& tkTimeQual,
                                 const std::vector<reco::Muon>& muons,
                                 const edm::Handle<std::vector<Trackster>> tsH,
-                                std::vector<TICLCandidate>& resultTracksters) = 0;
+                                std::vector<TICLCandidate>& resultTracksters,
+                                std::vector<TICLCandidate>& resultFromTracks,
+                                const ONNXRuntime* = nullptr) = 0;
 
     static void fillPSetDescription(edm::ParameterSetDescription& desc) { desc.add<int>("algo_verbosity", 0); };
 

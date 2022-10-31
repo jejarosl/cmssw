@@ -92,6 +92,7 @@ namespace cms::Ort {
                                const std::vector<std::vector<int64_t>>& input_shapes,
                                const std::vector<std::string>& output_names,
                                int64_t batch_size) const {
+    std::cout << "input_names " << input_names.size() << " Input  values " << input_values.size() << std::endl;
     assert(input_names.size() == input_values.size());
     assert(input_shapes.empty() || input_names.size() == input_shapes.size());
     assert(batch_size > 0);
@@ -119,6 +120,7 @@ namespace cms::Ort {
         }
       }
       auto expected_len = std::accumulate(input_dims.begin(), input_dims.end(), 1, std::multiplies<int64_t>());
+
       if (expected_len != (int64_t)value->size()) {
         throw cms::Exception("RuntimeError")
             << "Input array " << name << " has a wrong size of " << value->size() << ", expected " << expected_len;

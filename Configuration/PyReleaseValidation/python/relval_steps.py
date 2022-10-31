@@ -1052,6 +1052,7 @@ steps['HydjetQ_MinBias_XeXe_5442GeV_2017']=merge([{'-n':1},hiDefaults2017,gen201
 steps['HydjetQ_B12_5020GeV_2018']=merge([{'-n':1},hiDefaults2018,gen2018prod('Hydjet_Quenched_B12_5020GeV_cfi',U2000by1)])
 steps['HydjetQ_B12_5020GeV_2018_ppReco']=merge([{'-n':1},hiDefaults2018_ppReco,gen2018hiprod('Hydjet_Quenched_B12_5020GeV_cfi',U2000by1)])
 steps['HydjetQ_B12_5020GeV_2021_ppReco']=merge([{'-n':1},hiDefaults2021_ppReco,gen2021hiprod('Hydjet_Quenched_B12_5020GeV_cfi',U2000by1)])
+steps['HydjetQ_MinBias_5020GeV_2021_ppReco']=merge([{'-n':1},hiDefaults2021_ppReco,gen2021hiprod('Hydjet_Quenched_MinBias_5020GeV_cfi',U2000by1)])
 
 steps['QCD_Pt_80_120_13_HI']=merge([hiDefaults2018_ppReco,gen2018hiprod('QCD_Pt_80_120_13TeV_TuneCUETP8M1_cfi',Kby(9,150))])
 steps['PhotonJets_Pt_10_13_HI']=merge([hiDefaults2018_ppReco,gen2018hiprod('PhotonJet_Pt_10_13TeV_TuneCUETP8M1_cfi',Kby(9,150))])
@@ -2747,9 +2748,8 @@ steps['RECODR3_ZBOffline']=merge([{'-s':'RAW2DIGI,L1Reco,RECO,PAT,ALCA:SiStripCa
 steps['RECODR3_HLTPhysics_Offline']=merge([{'-s':'RAW2DIGI,L1Reco,RECO,PAT,ALCA:TkAlMinBias+HcalCalIterativePhiSym+HcalCalIsoTrkProducerFilter+HcalCalHO+HcalCalHBHEMuonProducerFilter,DQM:@commonReduced+@miniAODDQM','--procModifiers':'siPixelQualityRawToDigi'},steps['RECODR3_2021']])
 steps['RECODR3_AlCaTkCosmics_Offline']=merge([{'-s':'RAW2DIGI,L1Reco,RECO,SKIM:EXONoBPTXSkim,PAT,ALCA:TkAlCosmicsInCollisions,DQM:@standardDQMFakeHLT+@miniAODDQM'},steps['RECODR3_2021']])
 
-steps['RECONANORUN3']=merge([{'-s':'RAW2DIGI,L1Reco,RECO,PAT,NANO,DQM:@miniAODDQM+@nanoAODDQM'},steps['RECODR3']])
+steps['RECONANORUN3']=merge([{'-s':'RAW2DIGI,L1Reco,RECO,PAT,NANO:PhysicsTools/NanoAOD/V10/nano_cff,DQM:@miniAODDQM+@nanoAODDQM'},steps['RECODR3']])
 steps['RECOCOSMRUN3']=merge([{'--scenario':'cosmics','-s':'RAW2DIGI,L1Reco,RECO,DQM','--datatier':'RECO,DQMIO','--eventcontent':'RECO,DQM'},steps['RECONANORUN3']])
-steps['RECONANORUN3']['--customise'] += ',PhysicsTools/NanoAOD/V10/nano_cff.nanoAOD_customizeV10'
 
 # mask away - to be removed once we'll migrate the matrix to be fully unscheduled for RECO step
 #steps['RECOmAOD']=merge([step3DefaultsUnsch])
@@ -2823,6 +2823,19 @@ steps['RECOHI2021PPRECOMBAPPROXCLUSTERS']=merge([hiDefaults2021_ppReco_approxClu
                                                           '--eventcontent':'RECOSIM,MINIAODSIM,DQM',
                                                           '--era':'Run3_pp_on_PbPb',
                                                           '--procModifiers':'genJetSubEvent',
+                                                        },step3Up2015Defaults])
+
+steps['RECOHI2022PROD']=merge([hiDefaults2021_ppReco_approxClusters,{'-s':'RAW2DIGI,L1Reco,RECO',
+                                                                     '--datatier':'AODSIM',
+                                                                     '--eventcontent':'AODSIM',
+                                                                     '--era':'Run3_pp_on_PbPb',
+                                                        },step3Up2015Defaults])
+
+steps['MINIHI2022PROD']=merge([hiDefaults2021_ppReco,{'-s':'PAT',
+                                                                     '--datatier':'MINIAODSIM',
+                                                                     '--eventcontent':'MINIAODSIM',
+                                                                     '--era':'Run3_pp_on_PbPb',
+                                                                     '--procModifiers':'genJetSubEvent',
                                                         },step3Up2015Defaults])
 
 steps['RECOHI2021PPRECO']=merge([hiDefaults2021_ppReco,{'-s':'RAW2DIGI,L1Reco,RECO,PAT,VALIDATION:@standardValidationNoHLT+@miniAODValidation,DQM:@standardDQMFakeHLT+@miniAODDQM',

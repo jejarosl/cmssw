@@ -20,6 +20,7 @@
 <use name="MagneticField/Engine"/>
 <use name="MagneticField/Records"/>
 <use name="PhysicsTools/TensorFlow"/>
+<use name="PhysicsTools/ONNXRuntime"/>
 <use name="RecoLocalCalo/HGCalRecAlgos"/>
 <use name="RecoLocalCalo/HGCalRecProducers"/>
 <use name="RecoHGCal/TICL"/>
