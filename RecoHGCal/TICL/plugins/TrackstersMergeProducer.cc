@@ -367,20 +367,19 @@ void TrackstersMergeProducer::produce(edm::Event &evt, const edm::EventSetup &es
     // Compute timing
     assignTimeToCandidates(*resultCandidates);
 
-    if (debug_) {
-      // print info from graph
-      std::cout << "From graph:" << std::endl;
-      const auto nodes = ticlGraph.getNodes();
-      for (const auto &n : nodes) {
-        std::cout << "Trackster : " << n.getId() << std::endl;
-        std::cout << "inners : ";
-        for (auto &inner : n.getInner()) std::cout << (int)inner << " ";
-        std::cout << std::endl << "outers : ";
-        for (auto &outer : n.getOuter()) std::cout << (int)outer << " ";
-        std::cout << std::endl;
-      }
-    }
-
+    //    if (debug_) {
+    //      // print info from graph
+    //      std::cout << "From graph:" << std::endl;
+    //      const auto nodes = ticlGraph.getNodes();
+    //      for (const auto &n : nodes) {
+    //        std::cout << "Trackster : " << n.getId() << std::endl;
+    //        std::cout << "inners : ";
+    //        for (auto &inner : n.getInner()) std::cout << (int)inner << " ";
+    //        std::cout << std::endl << "outers : ";
+    //        for (auto &outer : n.getOuter()) std::cout << (int)outer << " ";
+    //        std::cout << std::endl;
+    //      }
+    //    }
   }
 
   assignPCAtoTracksters(*resultTrackstersMerged,
