@@ -1,5 +1,6 @@
-#ifndef RecoHGCal_TICL_LinkingAlgoByDirectionGeometric_H__
-#define RecoHGCal_TICL_LinkingAlgoByDirectionGeometric_H__
+
+#ifndef RecoHGCal_TICL_LinkingAlgoByGNN_H__
+#define RecoHGCal_TICL_LinkingAlgoByGNN_H__
 
 #include <memory>
 #include <array>
@@ -22,12 +23,11 @@
 #include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
 
 using namespace cms::Ort;
-
 namespace ticl {
-  class LinkingAlgoByDirectionGeometric final : public LinkingAlgoBase {
+  class LinkingAlgoByGNN final : public LinkingAlgoBase {
   public:
-    LinkingAlgoByDirectionGeometric(const edm::ParameterSet &conf);
-    ~LinkingAlgoByDirectionGeometric() override;
+    LinkingAlgoByGNN(const edm::ParameterSet &conf);
+    ~LinkingAlgoByGNN() override;
 
     void initialize(const HGCalDDDConstants *hgcons,
                     const hgcal::RecHitTools rhtools,
@@ -48,35 +48,6 @@ namespace ticl {
 
   private:
     typedef math::XYZVector Vector;
-
-    void buildLayers();
-
-    math::XYZVector propagateTrackster(const Trackster &t,
-                                       const unsigned idx,
-                                       float zVal,
-                                       std::array<TICLLayerTile, 2> &tracksterTiles);
-
-    void findTrackstersInWindow(const std::vector<std::pair<Vector, unsigned>> &seedingCollection,
-                                const std::array<TICLLayerTile, 2> &tracksterTiles,
-                                const std::vector<Vector> &tracksterPropPoints,
-                                float delta,
-                                unsigned trackstersSize,
-                                std::vector<std::vector<unsigned>> &resultCollection,
-                                bool useMask);
-
-    bool timeAndEnergyCompatible(float &total_raw_energy,
-                                 const reco::Track &track,
-                                 const Trackster &trackster,
-                                 const float &tkTime,
-                                 const float &tkTimeErr,
-                                 const float &tkTimeQual);
-
-    void recordTrackster(const unsigned ts,  // trackster index
-                         const std::vector<Trackster> &tracksters,
-                         const edm::Handle<std::vector<Trackster>> tsH,
-                         std::vector<unsigned> &ts_mask,
-                         float &energy_in_candidate,
-                         TICLCandidate &candidate);
 
     void dumpLinksFound(std::vector<std::vector<unsigned>> &resultCollection, const char *label) const;
 
