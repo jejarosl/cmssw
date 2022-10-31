@@ -40,14 +40,14 @@ void Graph::addEdge(int v, int w) {
 void Graph::DFSUtil(int v) {
   // Mark the current node as visited and print it
   visited[v] = true;
-  std::cout << v << " ";
-  connected_components.back().push_back(v);
+  std::cout << v << std::endl;
 
   // Recur for all the vertices adjacent to this vertex
   list<int>::iterator i;
   for (auto i = adj[v].begin(); i != adj[v].end(); ++i)
     if (!visited[*i]) {
-      connected_components.emplace_back(*i);
+      connected_components.back().push_back(*i);
+      std::cout << "Pushed back " << *i << std::endl;
       DFSUtil(*i);
     }
 }
@@ -59,7 +59,9 @@ void Graph::DFS() {
   // traversal starting from all vertices one by one
   for (auto i : adj)
     if (visited[i.first] == false) {
-      //connected_components.emplace_back(i.first);
+      std::cout << "Emplaced back: " << i.first << std::endl;
+      connected_components.emplace_back(1, i.first);  // {i.first}
+      std::cout << "Starting DFS from node: " << i.first << std::endl;
       DFSUtil(i.first);
     }
 }
@@ -174,33 +176,36 @@ void LinkingAlgoByGNN::linkTracksters(const edm::Handle<std::vector<reco::Track>
   }
 
   input_shapes.push_back({1, N, shapeFeatures});
-  input_shapes.push_back({1, 2, 3 * N});
-
   data.emplace_back(features);
 
   // Creating Edges: uncomment when have a Graph as an input
-  /*
-  std::vector<float_t> edges_src;
-  std::vector<float_t> edges_dst;
-  for (int i = 0; i < N; i++){
-    for (auto & i_neighbour : graph.node_linked_inners[i]){
-      // Create an edge between the tracksters
-      edges_src.push_back(i_neighbour);
-      edges_dst.push_back(i);  
-    }
-  }
-  */
+
+  //std::vector<float_t> edges_src;
+  //std::vector<float_t> edges_dst;
+  //for (int i = 0; i < N; i++){
+  //  for (auto & i_neighbour : graph.node_linked_inners[i]){
+  //    // Create an edge between the tracksters
+  //    edges_src.push_back(i_neighbour);
+  //    edges_dst.push_back(i);
+  //  }
+  //}
 
   // Create fully connected graph for testing
   std::vector<float> edges_src;
   std::vector<float> edges_dst;
+
   for (int i = 0; i < N; i++) {
-    for (int j = i; i < N; j++) {
-      edges_src.push_back(i);
-      edges_dst.push_back(j);
+    std::cout << "i: " << i << std::endl;
+    for (int j = i; j < N; j++) {
+      std::cout << "j: " << j << std::endl;
+      edges_src.push_back(static_cast<float>(i));
+      edges_dst.push_back(static_cast<float>(j));
     }
   }
+
   long unsigned int numEdges = edges_src.size();
+  input_shapes.push_back({1, 2, static_cast<int>(numEdges)});
+  std::cout << "Num edges: " << numEdges << std::endl;
 
   data.emplace_back(edges_src);
   for (auto &dst : edges_dst) {
@@ -208,6 +213,14 @@ void LinkingAlgoByGNN::linkTracksters(const edm::Handle<std::vector<reco::Track>
   }
 
   std::vector<float> edge_predictions = cache->run(input_names, data, input_shapes)[0];
+
+  std::cout << "Network output shape is " << edge_predictions.size() << std::endl;
+
+  for (long unsigned int i = 0; i < edge_predictions.size(); i++) {
+    std::cout << "Network output for edge " << data[1][i] << "-" << data[1][numEdges + i]
+              << " is: " << edge_predictions[i] << std::endl;
+  }
+
   // Create a graph
   Graph g;
   const auto classification_threshold = 0.7;
@@ -223,8 +236,10 @@ void LinkingAlgoByGNN::linkTracksters(const edm::Handle<std::vector<reco::Track>
     }
   }
 
-  std::cout << "Following is Depth First Traversal\n";
-  std::cout << "Connected components are:\n";
+  std::cout << "HERE 8" << std::endl;
+
+  std::cout << "Following is Depth First Traversal" << std::endl;
+  std::cout << "Connected components are: " << std::endl;
   g.DFS();
 
   int i = 0;
@@ -235,16 +250,9 @@ void LinkingAlgoByGNN::linkTracksters(const edm::Handle<std::vector<reco::Track>
     for (auto &trackster_id : component) {
       std::cout << "Component " << i << ": trackster id " << trackster_id << std::endl;
       tracksterCandidate.addTrackster(edm::Ptr<Trackster>(tsH, trackster_id));
-      i++;
     }
+    i++;
     connectedCandidates.push_back(tracksterCandidate);
-  }
-
-  std::cout << "Network output shape is " << edge_predictions.size() << std::endl;
-
-  for (long unsigned int i = 0; i < edge_predictions.size(); i++) {
-    std::cout << "Network output for edge " << data[1][i] << "-" << data[1][numEdges + i]
-              << " is: " << edge_predictions[i] << std::endl;
   }
 
   // The final candidates are passed to `resultLinked`
