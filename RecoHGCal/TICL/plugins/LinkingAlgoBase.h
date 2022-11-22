@@ -15,6 +15,7 @@
 #include "RecoLocalCalo/HGCalRecAlgos/interface/RecHitTools.h"
 #include "Geometry/HGCalCommonData/interface/HGCalDDDConstants.h"
 #include "PhysicsTools/ONNXRuntime/interface/ONNXRuntime.h"
+#include "DataFormats/Math/interface/Vector3D.h"
 
 using namespace cms::Ort;
 namespace edm {
@@ -25,9 +26,13 @@ namespace edm {
 namespace ticl {
   class LinkingAlgoBase {
   public:
+
+    typedef std::vector<double> Vec;
     LinkingAlgoBase(const edm::ParameterSet& conf) : algo_verbosity_(conf.getParameter<int>("algo_verbosity")) {}
 
     virtual ~LinkingAlgoBase(){};
+
+    
 
     virtual void initialize(const HGCalDDDConstants* hgcons,
                             const hgcal::RecHitTools rhtools,
@@ -42,10 +47,21 @@ namespace ticl {
                                 const edm::Handle<std::vector<Trackster>> tsH,
                                 std::vector<TICLCandidate>& resultTracksters,
                                 std::vector<TICLCandidate>& resultFromTracks,
-                                const ONNXRuntime* = nullptr) = 0;
+                                std::vector<double>& prop_tracks_x,
+                                std::vector<double>& prop_tracks_y,
+                                std::vector<double>& prop_tracks_z,
+                                std::vector<double>& prop_tracks_eta,
+                                std::vector<double>& prop_tracks_phi,
+                                std::vector<double>& prop_tracks_px,
+                                std::vector<double>& prop_tracks_py,
+                                std::vector<double>& prop_tracks_pz,
+                                std::vector<bool>& masked_track,
+                                const ONNXRuntime* = nullptr
+				) = 0;
 
     static void fillPSetDescription(edm::ParameterSetDescription& desc) { desc.add<int>("algo_verbosity", 0); };
 
+    enum VerbosityLevel { None = 0, Basic, Advanced, Expert, Guru };
   protected:
     int algo_verbosity_;
   };

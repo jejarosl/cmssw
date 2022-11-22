@@ -53,6 +53,7 @@ mergeTICLTask = cms.Task(ticlLayerTileTask
     ,ticlGraphTask
     ,ticlTracksterMergeTask
     ,ticlPFTask
+    ,ticlGraphTask
 )
 
 ticl_v3.toModify(mergeTICLTask, func=lambda x : x.add(ticlTracksterMergeTaskV3))
