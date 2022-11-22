@@ -1090,18 +1090,18 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
   int t_id = 0;
   for (auto trackster_iterator = tracksters.begin(); trackster_iterator != tracksters.end(); ++trackster_iterator) {
       //per-trackster analysis
-    trackster_time.push_back(trackster_iterator->time());
-    trackster_timeError.push_back(trackster_iterator->timeError());
-    trackster_regressed_energy.push_back(trackster_iterator->regressed_energy());
+//    trackster_time.push_back(trackster_iterator->time());
+//    trackster_timeError.push_back(trackster_iterator->timeError());
+//    trackster_regressed_energy.push_back(trackster_iterator->regressed_energy());
     trackster_raw_energy.push_back(trackster_iterator->raw_energy());
     trackster_raw_em_energy.push_back(trackster_iterator->raw_em_energy());
-    trackster_raw_pt.push_back(trackster_iterator->raw_pt());
-    trackster_raw_em_pt.push_back(trackster_iterator->raw_em_pt());
+//    trackster_raw_pt.push_back(trackster_iterator->raw_pt());
+//    trackster_raw_em_pt.push_back(trackster_iterator->raw_em_pt());
     trackster_barycenter_x.push_back(trackster_iterator->barycenter().x());
     trackster_barycenter_y.push_back(trackster_iterator->barycenter().y());
     trackster_barycenter_z.push_back(trackster_iterator->barycenter().z());
-    trackster_barycenter_eta.push_back(trackster_iterator->barycenter().eta());
-    trackster_barycenter_phi.push_back(trackster_iterator->barycenter().phi());
+//    trackster_barycenter_eta.push_back(trackster_iterator->barycenter().eta());
+//    trackster_barycenter_phi.push_back(trackster_iterator->barycenter().phi());
     trackster_EV1.push_back(trackster_iterator->eigenvalues()[0]);
     trackster_EV2.push_back(trackster_iterator->eigenvalues()[1]);
     trackster_EV3.push_back(trackster_iterator->eigenvalues()[2]);
@@ -1114,7 +1114,7 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
     std::vector<float_t> id_probs;
     for (size_t i = 0; i < 8; i++)
       id_probs.push_back(trackster_iterator->id_probabilities(i));
-    trackster_id_probabilities.push_back(id_probs);
+  //  trackster_id_probabilities.push_back(id_probs);
     
     // Clusters
     std::vector<uint32_t> vertices_indexes;
@@ -1163,27 +1163,27 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
 
   for (auto trackster_iterator = simTrackstersSC.begin(); trackster_iterator != simTrackstersSC.end(); ++trackster_iterator) {
       //per-trackster analysis
-    stsSC_trackster_time.push_back(trackster_iterator->time());
-    stsSC_trackster_timeError.push_back(trackster_iterator->timeError());
+//    stsSC_trackster_time.push_back(trackster_iterator->time());
+//    stsSC_trackster_timeError.push_back(trackster_iterator->timeError());
     stsSC_trackster_regressed_energy.push_back(trackster_iterator->regressed_energy());
     stsSC_trackster_raw_energy.push_back(trackster_iterator->raw_energy());
     stsSC_trackster_raw_em_energy.push_back(trackster_iterator->raw_em_energy());
-    stsSC_trackster_raw_pt.push_back(trackster_iterator->raw_pt());
-    stsSC_trackster_raw_em_pt.push_back(trackster_iterator->raw_em_pt());
+//    stsSC_trackster_raw_pt.push_back(trackster_iterator->raw_pt());
+//    stsSC_trackster_raw_em_pt.push_back(trackster_iterator->raw_em_pt());
     stsSC_trackster_barycenter_x.push_back(trackster_iterator->barycenter().x());
     stsSC_trackster_barycenter_y.push_back(trackster_iterator->barycenter().y());
     stsSC_trackster_barycenter_z.push_back(trackster_iterator->barycenter().z());
-    stsSC_trackster_barycenter_eta.push_back(trackster_iterator->barycenter().eta());
-    stsSC_trackster_barycenter_phi.push_back(trackster_iterator->barycenter().phi());
-    stsSC_trackster_EV1.push_back(trackster_iterator->eigenvalues()[0]);
-    stsSC_trackster_EV2.push_back(trackster_iterator->eigenvalues()[1]);
-    stsSC_trackster_EV3.push_back(trackster_iterator->eigenvalues()[2]);
-    stsSC_trackster_eVector0_x.push_back((trackster_iterator->eigenvectors()[0]).x());
-    stsSC_trackster_eVector0_y.push_back((trackster_iterator->eigenvectors()[0]).y());
-    stsSC_trackster_eVector0_z.push_back((trackster_iterator->eigenvectors()[0]).z());
-    stsSC_trackster_sigmaPCA1.push_back(trackster_iterator->sigmasPCA()[0]);
-    stsSC_trackster_sigmaPCA2.push_back(trackster_iterator->sigmasPCA()[1]);
-    stsSC_trackster_sigmaPCA3.push_back(trackster_iterator->sigmasPCA()[2]);
+//    stsSC_trackster_barycenter_eta.push_back(trackster_iterator->barycenter().eta());
+//    stsSC_trackster_barycenter_phi.push_back(trackster_iterator->barycenter().phi());
+//    stsSC_trackster_EV1.push_back(trackster_iterator->eigenvalues()[0]);
+//    stsSC_trackster_EV2.push_back(trackster_iterator->eigenvalues()[1]);
+//    stsSC_trackster_EV3.push_back(trackster_iterator->eigenvalues()[2]);
+//    stsSC_trackster_eVector0_x.push_back((trackster_iterator->eigenvectors()[0]).x());
+//    stsSC_trackster_eVector0_y.push_back((trackster_iterator->eigenvectors()[0]).y());
+//    stsSC_trackster_eVector0_z.push_back((trackster_iterator->eigenvectors()[0]).z());
+//    stsSC_trackster_sigmaPCA1.push_back(trackster_iterator->sigmasPCA()[0]);
+//    stsSC_trackster_sigmaPCA2.push_back(trackster_iterator->sigmasPCA()[1]);
+//    stsSC_trackster_sigmaPCA3.push_back(trackster_iterator->sigmasPCA()[2]);
     stsSC_pdgID.push_back(simclusters[trackster_iterator->seedIndex()].pdgId());
     auto simTrack = simclusters[trackster_iterator->seedIndex()].g4Tracks()[0];
     if(simTrack.crossedBoundary()){
@@ -1256,27 +1256,27 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
   nclusters_ = clusters.size();
   for (auto trackster_iterator = simTrackstersCP.begin(); trackster_iterator != simTrackstersCP.end(); ++trackster_iterator) {
       //per-trackster analysis
-    stsCP_trackster_time.push_back(trackster_iterator->time());
-    stsCP_trackster_timeError.push_back(trackster_iterator->timeError());
+ //   stsCP_trackster_time.push_back(trackster_iterator->time());
+ //   stsCP_trackster_timeError.push_back(trackster_iterator->timeError());
     stsCP_trackster_regressed_energy.push_back(trackster_iterator->regressed_energy());
     stsCP_trackster_raw_energy.push_back(trackster_iterator->raw_energy());
     stsCP_trackster_raw_em_energy.push_back(trackster_iterator->raw_em_energy());
-    stsCP_trackster_raw_pt.push_back(trackster_iterator->raw_pt());
-    stsCP_trackster_raw_em_pt.push_back(trackster_iterator->raw_em_pt());
+ //   stsCP_trackster_raw_pt.push_back(trackster_iterator->raw_pt());
+ //   stsCP_trackster_raw_em_pt.push_back(trackster_iterator->raw_em_pt());
     stsCP_trackster_barycenter_x.push_back(trackster_iterator->barycenter().x());
     stsCP_trackster_barycenter_y.push_back(trackster_iterator->barycenter().y());
     stsCP_trackster_barycenter_z.push_back(trackster_iterator->barycenter().z());
-    stsCP_trackster_barycenter_eta.push_back(trackster_iterator->barycenter().eta());
-    stsCP_trackster_barycenter_phi.push_back(trackster_iterator->barycenter().phi());
-    stsCP_trackster_EV1.push_back(trackster_iterator->eigenvalues()[0]);
-    stsCP_trackster_EV2.push_back(trackster_iterator->eigenvalues()[1]);
-    stsCP_trackster_EV3.push_back(trackster_iterator->eigenvalues()[2]);
-    stsCP_trackster_eVector0_x.push_back((trackster_iterator->eigenvectors()[0]).x());
-    stsCP_trackster_eVector0_y.push_back((trackster_iterator->eigenvectors()[0]).y());
-    stsCP_trackster_eVector0_z.push_back((trackster_iterator->eigenvectors()[0]).z());
-    stsCP_trackster_sigmaPCA1.push_back(trackster_iterator->sigmasPCA()[0]);
-    stsCP_trackster_sigmaPCA2.push_back(trackster_iterator->sigmasPCA()[1]);
-    stsCP_trackster_sigmaPCA3.push_back(trackster_iterator->sigmasPCA()[2]);
+//    stsCP_trackster_barycenter_eta.push_back(trackster_iterator->barycenter().eta());
+//    stsCP_trackster_barycenter_phi.push_back(trackster_iterator->barycenter().phi());
+//    stsCP_trackster_EV1.push_back(trackster_iterator->eigenvalues()[0]);
+//    stsCP_trackster_EV2.push_back(trackster_iterator->eigenvalues()[1]);
+//    stsCP_trackster_EV3.push_back(trackster_iterator->eigenvalues()[2]);
+ //   stsCP_trackster_eVector0_x.push_back((trackster_iterator->eigenvectors()[0]).x());
+  //  stsCP_trackster_eVector0_y.push_back((trackster_iterator->eigenvectors()[0]).y());
+   // stsCP_trackster_eVector0_z.push_back((trackster_iterator->eigenvectors()[0]).z());
+ //   stsCP_trackster_sigmaPCA1.push_back(trackster_iterator->sigmasPCA()[0]);
+ //   stsCP_trackster_sigmaPCA2.push_back(trackster_iterator->sigmasPCA()[1]);
+ //   stsCP_trackster_sigmaPCA3.push_back(trackster_iterator->sigmasPCA()[2]);
     stsCP_pdgID.push_back(caloparticles[trackster_iterator->seedIndex()].pdgId());
     auto simTrack = caloparticles[trackster_iterator->seedIndex()].g4Tracks()[0];
     if(simTrack.crossedBoundary()){
@@ -1362,36 +1362,36 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
   
   for (auto cluster_iterator = clusters.begin(); cluster_iterator != clusters.end(); ++cluster_iterator) {
     auto lc_seed = cluster_iterator->seed();
-    cluster_seedID.push_back(lc_seed);
+ //   cluster_seedID.push_back(lc_seed);
     cluster_energy.push_back(cluster_iterator->energy());
-    cluster_correctedEnergy.push_back(cluster_iterator->correctedEnergy());
-    cluster_correctedEnergyUncertainty.push_back(cluster_iterator->correctedEnergyUncertainty());
+//    cluster_correctedEnergy.push_back(cluster_iterator->correctedEnergy());
+//    cluster_correctedEnergyUncertainty.push_back(cluster_iterator->correctedEnergyUncertainty());
     cluster_position_x.push_back(cluster_iterator->x());
     cluster_position_y.push_back(cluster_iterator->y());
     cluster_position_z.push_back(cluster_iterator->z());
-    cluster_position_eta.push_back(cluster_iterator->eta());
-    cluster_position_phi.push_back(cluster_iterator->phi());
+//    cluster_position_eta.push_back(cluster_iterator->eta());
+//    cluster_position_phi.push_back(cluster_iterator->phi());
     auto haf = cluster_iterator->hitsAndFractions();
     auto layerId = rhtools_.getLayerWithOffset(haf[0].first);
-    cluster_layer_id.push_back(layerId);    
+    cluster_layer_id.push_back(layerId);
     uint32_t number_of_hits = cluster_iterator->hitsAndFractions().size();    
     cluster_number_of_hits.push_back(number_of_hits);  
-    cluster_type.push_back(ticl::returnIndex(lc_seed, rhtools_));
+ //   cluster_type.push_back(ticl::returnIndex(lc_seed, rhtools_));
 
-    cluster_timeErr.push_back(layerClustersTimes.get(c_id).second);
-    cluster_time.push_back(layerClustersTimes.get(c_id).first);
+ //   cluster_timeErr.push_back(layerClustersTimes.get(c_id).second);
+ //   cluster_time.push_back(layerClustersTimes.get(c_id).first);
 
     auto c_ld = 0.;
     if(layer_cluster_density[c_id] > 1e-5 && layer_cluster_density[c_id] < 3000){
       c_ld = layer_cluster_density[c_ld];
     }
-    cluster_ld.push_back(c_ld);
+    //luster_ld.push_back(c_ld);
     
     auto c_r = 0.;
     if(layer_cluster_radius[c_id] > 1e-5 && layer_cluster_radius[c_id] < 3000){
       c_r = layer_cluster_radius[c_id];
     }
-    cluster_radius.push_back(c_r);
+   // cluster_radius.push_back(c_r);
     c_id += 1;
 
   }
@@ -1404,11 +1404,11 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
     candidate_charge.push_back(candidate.charge());
     candidate_pdgId.push_back(candidate.pdgId());
     candidate_energy.push_back(candidate.energy());
-    candidate_px.push_back(candidate.px());
-    candidate_py.push_back(candidate.py());
-    candidate_pz.push_back(candidate.pz());
-    candidate_time.push_back(candidate.time());
-    candidate_time_err.push_back(candidate.timeError());
+    //candidate_px.push_back(candidate.px());
+    //candidate_py.push_back(candidate.py());
+    //candidate_pz.push_back(candidate.pz());
+    //candidate_time.push_back(candidate.time());
+    //candidate_time_err.push_back(candidate.timeError());
     std::vector<float_t> id_probs;
     for (int i = 0; i < 8; i++) {
       ticl::Trackster::ParticleType type = static_cast<ticl::Trackster::ParticleType>(i);
@@ -1442,27 +1442,27 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
   std::vector<float_t> vertices_correctedEnergyUncertainty;
   nTrackstersMerged = trackstersmerged.size();
   for (auto trackster_iterator = trackstersmerged.begin(); trackster_iterator != trackstersmerged.end(); ++trackster_iterator) {
-    tracksters_merged_time.push_back(trackster_iterator->time());
-    tracksters_merged_timeError.push_back(trackster_iterator->timeError());
+    //tracksters_merged_time.push_back(trackster_iterator->time());
+    //tracksters_merged_timeError.push_back(trackster_iterator->timeError());
     tracksters_merged_regressed_energy.push_back(trackster_iterator->regressed_energy());
     tracksters_merged_raw_energy.push_back(trackster_iterator->raw_energy());
     tracksters_merged_raw_em_energy.push_back(trackster_iterator->raw_em_energy());
-    tracksters_merged_raw_pt.push_back(trackster_iterator->raw_pt());
-    tracksters_merged_raw_em_pt.push_back(trackster_iterator->raw_em_pt());
+    //tracksters_merged_raw_pt.push_back(trackster_iterator->raw_pt());
+    //tracksters_merged_raw_em_pt.push_back(trackster_iterator->raw_em_pt());
     tracksters_merged_barycenter_x.push_back(trackster_iterator->barycenter().x());
     tracksters_merged_barycenter_y.push_back(trackster_iterator->barycenter().y());
     tracksters_merged_barycenter_z.push_back(trackster_iterator->barycenter().z());
-    tracksters_merged_barycenter_eta.push_back(trackster_iterator->barycenter().eta());
-    tracksters_merged_barycenter_phi.push_back(trackster_iterator->barycenter().phi());
-    tracksters_merged_EV1.push_back(trackster_iterator->eigenvalues()[0]);
-    tracksters_merged_EV2.push_back(trackster_iterator->eigenvalues()[1]);
-    tracksters_merged_EV3.push_back(trackster_iterator->eigenvalues()[2]);
-    tracksters_merged_eVector0_x.push_back((trackster_iterator->eigenvectors()[0]).x());
-    tracksters_merged_eVector0_y.push_back((trackster_iterator->eigenvectors()[0]).y());
-    tracksters_merged_eVector0_z.push_back((trackster_iterator->eigenvectors()[0]).z());
-    tracksters_merged_sigmaPCA1.push_back(trackster_iterator->sigmasPCA()[0]);
-    tracksters_merged_sigmaPCA2.push_back(trackster_iterator->sigmasPCA()[1]);
-    tracksters_merged_sigmaPCA3.push_back(trackster_iterator->sigmasPCA()[2]);
+    //tracksters_merged_barycenter_eta.push_back(trackster_iterator->barycenter().eta());
+    //tracksters_merged_barycenter_phi.push_back(trackster_iterator->barycenter().phi());
+    //tracksters_merged_EV1.push_back(trackster_iterator->eigenvalues()[0]);
+    //tracksters_merged_EV2.push_back(trackster_iterator->eigenvalues()[1]);
+    //tracksters_merged_EV3.push_back(trackster_iterator->eigenvalues()[2]);
+    //tracksters_merged_eVector0_x.push_back((trackster_iterator->eigenvectors()[0]).x());
+    //tracksters_merged_eVector0_y.push_back((trackster_iterator->eigenvectors()[0]).y());
+    //tracksters_merged_eVector0_z.push_back((trackster_iterator->eigenvectors()[0]).z());
+    //tracksters_merged_sigmaPCA1.push_back(trackster_iterator->sigmasPCA()[0]);
+    //tracksters_merged_sigmaPCA2.push_back(trackster_iterator->sigmasPCA()[1]);
+    //tracksters_merged_sigmaPCA3.push_back(trackster_iterator->sigmasPCA()[2]);
     
     std::vector<float_t> id_probs;
     for (size_t i = 0; i < 8; i++)
