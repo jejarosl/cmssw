@@ -6,6 +6,7 @@
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/EventSetup.h"
 #include "DataFormats/HGCalReco/interface/Trackster.h"
+#include "DataFormats/HGCalReco/interface/TICLGraph.h"
 #include "DataFormats/HGCalReco/interface/TICLCandidate.h"
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
@@ -42,6 +43,7 @@ namespace ticl {
                                 const edm::Handle<std::vector<Trackster>> tsH,
                                 std::vector<TICLCandidate>& resultTracksters,
                                 std::vector<TICLCandidate>& resultFromTracks,
+                                const TICLGraph &ticlGraph,
                                 const ONNXRuntime* = nullptr) = 0;
 
     static void fillPSetDescription(edm::ParameterSetDescription& desc) { desc.add<int>("algo_verbosity", 0); };

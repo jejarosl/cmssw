@@ -42,6 +42,7 @@ namespace ticl {
                         const edm::Handle<std::vector<Trackster>>,
                         std::vector<TICLCandidate> &,
                         std::vector<TICLCandidate> &,
+                        const TICLGraph &,
                         const ONNXRuntime *cache) override;
 
     static void fillPSetDescription(edm::ParameterSetDescription &desc);

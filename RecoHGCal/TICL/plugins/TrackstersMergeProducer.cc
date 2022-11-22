@@ -274,6 +274,9 @@ void TrackstersMergeProducer::produce(edm::Event &evt, const edm::EventSetup &es
   const auto &trackTimeErr = evt.get(tracks_time_err_token_);
   const auto &trackTimeQual = evt.get(tracks_time_quality_token_);
 
+  edm::Handle<TICLGraph> ticlGraph_h;
+  evt.getByToken(ticlGraph_token_, ticlGraph_h);
+  const auto &ticlGraph = *ticlGraph_h;
   //TODO: add graph and input it as an argument to the linkTracksters()
 
   // Linking
@@ -283,9 +286,10 @@ void TrackstersMergeProducer::produce(edm::Event &evt, const edm::EventSetup &es
                                trackTimeErr,
                                trackTimeQual,
                                muons,
-                               trackstersclue3d_h,  //graph,
+                               trackstersclue3d_h,
                                *resultCandidates,
                                *resultFromTracks,
+                               ticlGraph,
                                globalCache());
   std::cout << " Run Links " << std::endl;
 
@@ -331,9 +335,7 @@ void TrackstersMergeProducer::produce(edm::Event &evt, const edm::EventSetup &es
                 std::back_inserter(outTrackster.vertex_multiplicity()));
     }
 
-    edm::Handle<TICLGraph> ticlGraph_h;
-    evt.getByToken(ticlGraph_token_, ticlGraph_h);
-    const auto &ticlGraph = *ticlGraph_h;
+
 
     LogDebug("TrackstersMergeProducer") << std::endl;
 
@@ -622,6 +624,7 @@ void TrackstersMergeProducer::fillDescriptions(edm::ConfigurationDescriptions &d
   edm::ParameterSetDescription desc;
 
   edm::ParameterSetDescription linkingDesc;
+  // Change here for different linking algorithm: LinkingAlgoByGNN, LinkingAlgoByDirectionGeometric
   linkingDesc.addNode(edm::PluginDescription<LinkingAlgoFactory>("type", "LinkingAlgoByGNN", true));
   desc.add<edm::ParameterSetDescription>("linkingPSet", linkingDesc);
 
@@ -661,7 +664,7 @@ void TrackstersMergeProducer::fillDescriptions(edm::ConfigurationDescriptions &d
   desc.add<int>("eid_n_layers", 50);
   desc.add<int>("eid_n_clusters", 10);
   desc.add<edm::FileInPath>("model_path",
-                            edm::FileInPath("RecoHGCal/TICL/data/tf_models/model_mlp_batch_1_float_inputs.onnx"));
+                            edm::FileInPath("RecoHGCal/TICL/data/tf_models/model_gcnn_pion.onnx"));
   descriptions.add("trackstersMergeProducer", desc);
 }
 

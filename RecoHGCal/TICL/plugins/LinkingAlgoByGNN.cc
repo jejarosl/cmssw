@@ -40,7 +40,7 @@ void Graph::addEdge(int v, int w) {
 void Graph::DFSUtil(int v) {
   // Mark the current node as visited and print it
   visited[v] = true;
-  std::cout << v << std::endl;
+  //std::cout << v << std::endl;
 
   // Recur for all the vertices adjacent to this vertex
   list<int>::iterator i;
@@ -52,15 +52,14 @@ void Graph::DFSUtil(int v) {
     }
 }
 
-// The function to do DFS traversal. It uses recursive
-// DFSUtil()
+// The function to do DFS traversal. It uses recursive DFSUtil()
 void Graph::DFS() {
   // Call the recursive helper function to print DFS
   // traversal starting from all vertices one by one
   for (auto i : adj)
     if (visited[i.first] == false) {
       std::cout << "Emplaced back: " << i.first << std::endl;
-      connected_components.emplace_back(1, i.first);  // {i.first}
+      connected_components.emplace_back(1, i.first);
       std::cout << "Starting DFS from node: " << i.first << std::endl;
       DFSUtil(i.first);
     }
@@ -94,27 +93,32 @@ void LinkingAlgoByGNN::linkTracksters(const edm::Handle<std::vector<reco::Track>
                                       const edm::ValueMap<float> &tkTimeQual,
                                       const std::vector<reco::Muon> &muons,
                                       const edm::Handle<std::vector<Trackster>> tsH,
-                                      //const edm::Handle<std::vector<TICLGraph>> graph,
                                       std::vector<TICLCandidate> &resultLinked,
                                       std::vector<TICLCandidate> &chargedHadronsFromTk,
+                                      const TICLGraph &ticlGraph,
                                       const ONNXRuntime *cache) {
+                                      
   std::cout << "Linking Algo by GNN " << std::endl;
   const auto &tracks = *tkH;
   const auto &tracksters = *tsH;
 
   auto bFieldProd = bfield_.product();
   const Propagator &prop = (*propagator_);
-  std::cout << "LINKING ALGO GNN" << std::endl;
 
-  const std::vector<std::string> input_names = {"features", "edge_index"};
+  const std::vector<std::string> input_names = {"features", "edge_index", "adj", "trackster_index"};
 
   long int N = tracksters.size();
-  const auto shapeFeatures = 16;
+  const auto shapeFeatures = 15;
 
   FloatArrays data;
   std::vector<std::vector<int64_t>> input_shapes;
 
   std::vector<float> features;
+  // For nearest neighbour finding
+  std::vector<float> barycenters_x;
+  std::vector<float> barycenters_y;
+  std::vector<float> barycenters_z;
+  
 
   // Print out info about tracksters
   std::cout << "Number of tracksters in event: " << N << std::endl;
@@ -142,7 +146,6 @@ void LinkingAlgoByGNN::linkTracksters(const edm::Handle<std::vector<reco::Track>
 
     // size
     std::cout << "Size: " << ts.vertices().size() << std::endl;
-
     std::cout << "Raw Energy: " << ts.raw_energy() << std::endl;
     std::cout << "Raw EM Energy: " << ts.raw_em_energy() << std::endl;
 
@@ -153,11 +156,10 @@ void LinkingAlgoByGNN::linkTracksters(const edm::Handle<std::vector<reco::Track>
             for indx, cand in enumerate(cand_data[ev].tracksters_in_candidate):
                 for ts in cand:
                     in_candidate[ts] = indx
-    
     */
     features.push_back(ts.barycenter().x());
     features.push_back(ts.barycenter().y());
-    features.push_back(ts.barycenter().z());
+    features.push_back(ts.barycenter().z());    
     features.push_back(eigenvector0.x());
     features.push_back(eigenvector0.y());
     features.push_back(eigenvector0.z());
@@ -170,7 +172,11 @@ void LinkingAlgoByGNN::linkTracksters(const edm::Handle<std::vector<reco::Track>
     features.push_back(ts.vertices().size());
     features.push_back(ts.raw_energy());
     features.push_back(ts.raw_em_energy());
-    features.push_back(-1.0);  // set candidates index to -1 as of now; remove later (after changing the model file)
+    
+    barycenters_x.push_back(ts.barycenter().x());
+    barycenters_y.push_back(ts.barycenter().y());
+    barycenters_z.push_back(ts.barycenter().z());
+    
 
     std::cout << "--------------------" << std::endl;
   }
@@ -180,31 +186,61 @@ void LinkingAlgoByGNN::linkTracksters(const edm::Handle<std::vector<reco::Track>
 
   // Creating Edges: uncomment when have a Graph as an input
 
-  //std::vector<float_t> edges_src;
-  //std::vector<float_t> edges_dst;
-  //for (int i = 0; i < N; i++){
-  //  for (auto & i_neighbour : graph.node_linked_inners[i]){
-  //    // Create an edge between the tracksters
-  //    edges_src.push_back(i_neighbour);
-  //    edges_dst.push_back(i);
-  //  }
-  //}
-
-  // Create fully connected graph for testing
   std::vector<float> edges_src;
   std::vector<float> edges_dst;
-
-  for (int i = 0; i < N; i++) {
-    std::cout << "i: " << i << std::endl;
-    for (int j = i; j < N; j++) {
-      std::cout << "j: " << j << std::endl;
-      edges_src.push_back(static_cast<float>(i));
-      edges_dst.push_back(static_cast<float>(j));
+  for (int i = 0; i < N; i++){
+    for (auto & i_neighbour : ticlGraph.getNode(i).getInner()){
+      // Create an edge between the tracksters
+      edges_src.push_back(static_cast<float>(i_neighbour));
+      edges_dst.push_back(static_cast<float>(i));
     }
+    
+    /* 
+    // Nearest Neighbour connection
+    if (len(ticlGraph.getNode(i).getInner()) == 0 && len(ticlGraph.getNode(i).getOuter()) == 0){
+     
+      const auto pos_i = [barycenters_x[i], barycenters_y[i], barycenters_z[i]];
+      const auto d_least = 1000;
+      for (auto k=0; k< len(barycenters_x; k++){
+          if (k == i){
+              continue;
+          }
+          pos_k = [barycenters_x[k], barycenters_y[k], barycenters_z[k]];
+          del_pos = pos_k - pos_i;
+          d_squared = del_pos[0]**2 + del_pos[1]**2 + del_pos[2]**2;
+          if (d_squared < d_least){
+              d_least = d_squared;
+              i_least = k;
+          }
+      }
+              
+      const auto nearest_id = findNearestNeighbour(i, b_x, b_y, b_z)
+      edges_src.push_back(static_cast<float>(nearest_id));
+      edges_dst.push_back(static_cast<float>(i));
+      }
+    */
   }
 
-  long unsigned int numEdges = edges_src.size();
-  input_shapes.push_back({1, 2, static_cast<int>(numEdges)});
+  auto numEdges = static_cast<int>(edges_src.size());
+  
+  // Do not run the network in these cases
+  if (numEdges == 0 || N < 2){
+  
+    std::vector<TICLCandidate> connectedCandidates;
+  
+    for (int trackster_id = 0; trackster_id < N; trackster_id++) {
+    
+      TICLCandidate tracksterCandidate;
+      tracksterCandidate.addTrackster(edm::Ptr<Trackster>(tsH, trackster_id));
+      connectedCandidates.push_back(tracksterCandidate);
+    }
+  
+    // The final candidates are passed to `resultLinked`
+    resultLinked.insert(std::end(resultLinked), std::begin(connectedCandidates), std::end(connectedCandidates));
+    return;
+  }
+  
+  input_shapes.push_back({1, 2, numEdges});
   std::cout << "Num edges: " << numEdges << std::endl;
 
   data.emplace_back(edges_src);
@@ -212,11 +248,59 @@ void LinkingAlgoByGNN::linkTracksters(const edm::Handle<std::vector<reco::Track>
     data.back().push_back(dst);
   }
 
+  
+  // Creating Adjacency matrix and trackster index
+  std::vector<float> A;
+  std::vector<float> trackster_index;
+  
+  // Add self-loops
+  /*
+  for (int i=0; i<N; i++){
+    for (int j=0; j<N; j++){
+      if (i == j){
+        A.push_back(1.);
+        trackster_index.push_back(1.);
+      }
+      else {
+        A.push_back(0.);
+        trackster_index.push_back(0.);
+      }
+    }
+  }
+  */
+  
+  // Add undirectional edges
+  for (int i=0; i<numEdges; i++){
+    // for source
+    for (int j=0; j<N; j++){
+      if (j == edges_src[i]){A.push_back(1.);} //static_cast<float>(1.0)
+      else {A.push_back(0.);}
+      if (j == edges_dst[i]){trackster_index.push_back(1.);}
+      else {trackster_index.push_back(0.);}
+    }
+    
+    // for dst
+    for (int j=0; j<N; j++){
+      if (j == edges_dst[i]){A.push_back(1.);}
+      else {A.push_back(0.);}
+      if (j == edges_src[i]){trackster_index.push_back(1.);}
+      else {trackster_index.push_back(0.);}
+    }
+  }
+  
+  //input_shapes.push_back({1, 2*numEdges+N, N});
+  input_shapes.push_back({1, 2*numEdges, N});
+  data.emplace_back(A);
+  //input_shapes.push_back({1, 2*numEdges+N, N});
+  input_shapes.push_back({1, 2*numEdges, N});
+  data.emplace_back(trackster_index);
+  
+  std::cout << "Adj size: " << A.size() << std::endl;
+
+  // Get network output
   std::vector<float> edge_predictions = cache->run(input_names, data, input_shapes)[0];
 
-  std::cout << "Network output shape is " << edge_predictions.size() << std::endl;
-
-  for (long unsigned int i = 0; i < edge_predictions.size(); i++) {
+  for (int i = 0; i < static_cast<int>(edge_predictions.size()); i++) {
     std::cout << "Network output for edge " << data[1][i] << "-" << data[1][numEdges + i]
               << " is: " << edge_predictions[i] << std::endl;
   }
@@ -225,8 +309,12 @@ void LinkingAlgoByGNN::linkTracksters(const edm::Handle<std::vector<reco::Track>
   Graph g;
   const auto classification_threshold = 0.7;
 
+  // Self-loop for not connected nodes
+  for (int i = 0; i < N; i++){
+    g.addEdge(i, i);
+  }
   // Building a predicted graph
-  for (long unsigned int i = 0; i < numEdges; i++) {
+  for (int i = 0; i < numEdges; i++) {
     if (edge_predictions[i] >= classification_threshold) {
       auto src = data[1][i];
       auto dst = data[1][numEdges + i];
@@ -235,8 +323,6 @@ void LinkingAlgoByGNN::linkTracksters(const edm::Handle<std::vector<reco::Track>
       g.addEdge(dst, src);
     }
   }
-
-  std::cout << "HERE 8" << std::endl;
 
   std::cout << "Following is Depth First Traversal" << std::endl;
   std::cout << "Connected components are: " << std::endl;
@@ -259,6 +345,7 @@ void LinkingAlgoByGNN::linkTracksters(const edm::Handle<std::vector<reco::Track>
   resultLinked.insert(std::end(resultLinked), std::begin(connectedCandidates), std::end(connectedCandidates));
 
 }  // linkTracksters
+
 
 void LinkingAlgoByGNN::fillPSetDescription(edm::ParameterSetDescription &desc) {
   desc.add<std::string>("cutTk",

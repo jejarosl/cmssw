@@ -233,6 +233,7 @@ void LinkingAlgoByDirectionGeometric::linkTracksters(const edm::Handle<std::vect
                                                      const edm::Handle<std::vector<Trackster>> tsH,
                                                      std::vector<TICLCandidate> &resultLinked,
                                                      std::vector<TICLCandidate> &chargedHadronsFromTk,
+                                                     const TICLGraph &ticlGraph,
                                                      const ONNXRuntime *cache) {
   const auto &tracks = *tkH;
   const auto &tracksters = *tsH;
