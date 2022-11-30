@@ -87,10 +87,7 @@ private:
 
   const edm::EDGetTokenT<std::vector<Trackster>> tracksters_clue3d_token_;
   const edm::EDGetTokenT<TICLGraph> ticlGraph_token_;
-<<<<<<< HEAD
   const edm::EDGetTokenT<std::vector<TICLSeedingRegion>> seedingTrk_token_;
-=======
->>>>>>> waredjeb/ticlv4_new_associators_ntupler_CMSSW_12_6_0_pre3_forKate
   const edm::EDGetTokenT<std::vector<reco::CaloCluster>> clusters_token_;
   const edm::EDGetTokenT<edm::ValueMap<std::pair<float, float>>> clustersTime_token_;
   const edm::EDGetTokenT<std::vector<reco::Track>> tracks_token_;
@@ -298,18 +295,21 @@ void TrackstersMergeProducer::produce(edm::Event &evt, const edm::EventSetup &es
   const auto &trackTimeErr = evt.get(tracks_time_err_token_);
   const auto &trackTimeQual = evt.get(tracks_time_quality_token_);
 
-  //TODO: add graph and input it as an argument to the linkTracksters()
-
-  // Linking
-  std::cout << " Run Links " << std::endl;
-  masked_tracks->resize(tracks.size(), false);
-  linkingAlgo_->linkTracksters(
-      track_h, trackTime, trackTimeErr, trackTimeQual, muons, trackstersclue3d_h, *resultCandidates,*resultFromTracks, *hgcaltracks_x,*hgcaltracks_y,*hgcaltracks_z,*hgcaltracks_eta,*hgcaltracks_phi,*hgcaltracks_px,*hgcaltracks_py,*hgcaltracks_pz,*masked_tracks, globalCache());
-  std::cout << " Run Links " << std::endl;
 
   edm::Handle<TICLGraph> ticlGraph_h;
   evt.getByToken(ticlGraph_token_, ticlGraph_h);
   const auto &ticlGraph = *ticlGraph_h;
+  
+  // Linking
+  std::cout << " Run Links " << std::endl;
+  masked_tracks->resize(tracks.size(), false);
+  linkingAlgo_->linkTracksters(track_h, trackTime, trackTimeErr, trackTimeQual, muons,
+                               trackstersclue3d_h, *resultCandidates,*resultFromTracks,
+                               *hgcaltracks_x,*hgcaltracks_y,*hgcaltracks_z,*hgcaltracks_eta,*hgcaltracks_phi,*hgcaltracks_px,*hgcaltracks_py,*hgcaltracks_pz,*masked_tracks, 
+                               ticlGraph, globalCache());
+  std::cout << " Run Links " << std::endl;
+
+
   // Linking
   // Print debug info
   LogDebug("TrackstersMergeProducer") << "Results from the linking step : " << std::endl
@@ -352,14 +352,6 @@ void TrackstersMergeProducer::produce(edm::Event &evt, const edm::EventSetup &es
                 std::end(thisTrackster.vertex_multiplicity()),
                 std::back_inserter(outTrackster.vertex_multiplicity()));
     }
-    edm::Handle<TICLGraph> ticlGraph_h;
-    evt.getByToken(ticlGraph_token_, ticlGraph_h);
-    const auto &ticlGraph = *ticlGraph_h;
-
-
-    edm::Handle<TICLGraph> ticlGraph_h;
-    evt.getByToken(ticlGraph_token_, ticlGraph_h);
-    const auto &ticlGraph = *ticlGraph_h;
 
     LogDebug("TrackstersMergeProducer") << std::endl;
 
@@ -657,6 +649,8 @@ void TrackstersMergeProducer::fillDescriptions(edm::ConfigurationDescriptions &d
   edm::ParameterSetDescription desc;
 
   edm::ParameterSetDescription linkingDesc;
+  
+  // Change here for different linking algorithm: LinkingAlgoByGNN, LinkingAlgoByDirectionGeometric
   linkingDesc.addNode(edm::PluginDescription<LinkingAlgoFactory>("type", "LinkingAlgoByGNN", true));
   desc.add<edm::ParameterSetDescription>("linkingPSet", linkingDesc);
 
@@ -696,7 +690,7 @@ void TrackstersMergeProducer::fillDescriptions(edm::ConfigurationDescriptions &d
   desc.add<int>("eid_n_layers", 50);
   desc.add<int>("eid_n_clusters", 10);
   desc.add<edm::FileInPath>("model_path",
-                            edm::FileInPath("RecoHGCal/TICL/data/tf_models/model_mlp_batch_1_float_inputs.onnx"));
+                            edm::FileInPath("RecoHGCal/TICL/data/tf_models/pion_model.onnx"));
   descriptions.add("trackstersMergeProducer", desc);
 }
 

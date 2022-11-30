@@ -34,15 +34,25 @@ namespace ticl {
                     const edm::ESHandle<MagneticField> bfieldH,
                     const edm::ESHandle<Propagator> propH) override;
 
-    void linkTracksters(const edm::Handle<std::vector<reco::Track>>,
-                        const edm::ValueMap<float> &,
-                        const edm::ValueMap<float> &,
-                        const edm::ValueMap<float> &,
-                        const std::vector<reco::Muon> &,
-                        const edm::Handle<std::vector<Trackster>>,
-                        std::vector<TICLCandidate> &,
-                        std::vector<TICLCandidate> &,
-                        const ONNXRuntime *cache) override;
+    void linkTracksters(const edm::Handle<std::vector<reco::Track>> tkH,
+                                                     const edm::ValueMap<float> &tkTime,
+                                                     const edm::ValueMap<float> &tkTimeErr,
+                                                     const edm::ValueMap<float> &tkTimeQual,
+                                                     const std::vector<reco::Muon> &muons,
+                                                     const edm::Handle<std::vector<Trackster>> tsH,
+                                                     std::vector<TICLCandidate> &resultLinked,
+                                                     std::vector<TICLCandidate> &chargedHadronsFromTk,
+                                                     std::vector<double>& prop_tracks_x,
+                                                     std::vector<double>& prop_tracks_y,
+                                                     std::vector<double>& prop_tracks_z,
+                                                     std::vector<double>& prop_tracks_eta,
+                                                     std::vector<double>& prop_tracks_phi,
+                                                     std::vector<double>& prop_tracks_px,
+                                                     std::vector<double>& prop_tracks_py,
+                                                     std::vector<double>& prop_tracks_pz,
+                                                     std::vector<bool>& masked_tracks, 
+                                                     const TICLGraph &,
+                                                     const ONNXRuntime *cache) override;
 
     static void fillPSetDescription(edm::ParameterSetDescription &desc);
 

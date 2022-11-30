@@ -7,6 +7,7 @@
 #include "FWCore/Framework/interface/EventSetup.h"
 #include "DataFormats/HGCalReco/interface/Trackster.h"
 #include "DataFormats/HGCalReco/interface/TICLCandidate.h"
+#include "DataFormats/HGCalReco/interface/TICLGraph.h"
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "DataFormats/MuonReco/interface/Muon.h"
@@ -56,8 +57,8 @@ namespace ticl {
                                 std::vector<double>& prop_tracks_py,
                                 std::vector<double>& prop_tracks_pz,
                                 std::vector<bool>& masked_track,
-                                const ONNXRuntime* = nullptr
-				) = 0;
+                                const TICLGraph &ticlGraph,
+                                const ONNXRuntime* = nullptr) = 0;
 
     static void fillPSetDescription(edm::ParameterSetDescription& desc) { desc.add<int>("algo_verbosity", 0); };
 

@@ -1361,7 +1361,7 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
   int c_id = 0;
   
   for (auto cluster_iterator = clusters.begin(); cluster_iterator != clusters.end(); ++cluster_iterator) {
-    auto lc_seed = cluster_iterator->seed();
+ //auto lc_seed = cluster_iterator->seed();
  //   cluster_seedID.push_back(lc_seed);
     cluster_energy.push_back(cluster_iterator->energy());
 //    cluster_correctedEnergy.push_back(cluster_iterator->correctedEnergy());
@@ -1387,10 +1387,10 @@ void Ntupler::analyze(const edm::Event& event, const edm::EventSetup& setup) {
     }
     //luster_ld.push_back(c_ld);
     
-    auto c_r = 0.;
-    if(layer_cluster_radius[c_id] > 1e-5 && layer_cluster_radius[c_id] < 3000){
-      c_r = layer_cluster_radius[c_id];
-    }
+   // auto c_r = 0.;
+   // if(layer_cluster_radius[c_id] > 1e-5 && layer_cluster_radius[c_id] < 3000){
+   //   c_r = layer_cluster_radius[c_id];
+   // }
    // cluster_radius.push_back(c_r);
     c_id += 1;
 

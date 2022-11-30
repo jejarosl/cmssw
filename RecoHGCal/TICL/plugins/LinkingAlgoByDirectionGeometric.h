@@ -51,6 +51,7 @@ namespace ticl {
                         std::vector<double>& prop_tracks_py,
                         std::vector<double>& prop_tracks_pz,
                         std::vector<bool>& masked_track,
+                        const TICLGraph &,
                         const ONNXRuntime *cache) override;
 
     static void fillPSetDescription(edm::ParameterSetDescription &desc);

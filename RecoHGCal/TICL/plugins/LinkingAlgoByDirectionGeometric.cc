@@ -241,7 +241,9 @@ void LinkingAlgoByDirectionGeometric::linkTracksters(const edm::Handle<std::vect
                                                      std::vector<double>& prop_tracks_px,
                                                      std::vector<double>& prop_tracks_py,
                                                      std::vector<double>& prop_tracks_pz,
-                                                     std::vector<bool>& masked_tracks, const ONNXRuntime *cache) {
+                                                     std::vector<bool>& masked_tracks, 
+                                                     const TICLGraph &ticlGraph,
+                                                     const ONNXRuntime *cache) {
   constexpr double mpion = 0.13957;
   constexpr float mpion2 = mpion * mpion;
 
