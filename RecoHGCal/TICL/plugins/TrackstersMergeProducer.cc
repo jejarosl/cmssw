@@ -690,7 +690,7 @@ void TrackstersMergeProducer::fillDescriptions(edm::ConfigurationDescriptions &d
   desc.add<int>("eid_n_layers", 50);
   desc.add<int>("eid_n_clusters", 10);
   desc.add<edm::FileInPath>("model_path",
-                            edm::FileInPath("RecoHGCal/TICL/data/tf_models/pion_model.onnx"));
+                            edm::FileInPath("RecoHGCal/TICL/data/tf_models/model_with_std.onnx"));
   descriptions.add("trackstersMergeProducer", desc);
 }
 
