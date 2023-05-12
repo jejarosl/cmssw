@@ -17,6 +17,7 @@
 #include "Geometry/HGCalCommonData/interface/HGCalDDDConstants.h"
 #include "PhysicsTools/ONNXRuntime/interface/ONNXRuntime.h"
 #include "DataFormats/Math/interface/Vector3D.h"
+#include "DataFormats/CaloRecHit/interface/CaloCluster.h"
 
 using namespace cms::Ort;
 namespace edm {
@@ -58,6 +59,7 @@ namespace ticl {
                                 std::vector<double>& prop_tracks_pz,
                                 std::vector<bool>& masked_track,
                                 const TICLGraph &ticlGraph,
+                                const std::vector<reco::CaloCluster> &,
                                 const ONNXRuntime* = nullptr) = 0;
 
     static void fillPSetDescription(edm::ParameterSetDescription& desc) { desc.add<int>("algo_verbosity", 0); };

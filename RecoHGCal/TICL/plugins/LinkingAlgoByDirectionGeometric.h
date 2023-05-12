@@ -20,6 +20,7 @@
 #include "CommonTools/Utils/interface/StringCutObjectSelector.h"
 
 #include "MagneticField/Records/interface/IdealMagneticFieldRecord.h"
+#include "DataFormats/CaloRecHit/interface/CaloCluster.h"
 
 using namespace cms::Ort;
 
@@ -52,6 +53,7 @@ namespace ticl {
                         std::vector<double>& prop_tracks_pz,
                         std::vector<bool>& masked_track,
                         const TICLGraph &,
+                        const std::vector<reco::CaloCluster> &,
                         const ONNXRuntime *cache) override;
 
     static void fillPSetDescription(edm::ParameterSetDescription &desc);
