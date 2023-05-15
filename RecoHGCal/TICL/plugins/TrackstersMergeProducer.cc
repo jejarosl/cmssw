@@ -650,9 +650,9 @@ void TrackstersMergeProducer::fillDescriptions(edm::ConfigurationDescriptions &d
 
   edm::ParameterSetDescription linkingDesc;
   
-  // Change here for different linking algorithm: LinkingAlgoByGNN, LinkingAlgoByDirectionGeometric
+  // Change here for different linking algorithm: LinkingAlgoByGNN, LinkingAlgoByDirectionGeometric, LinkingAlgoByMLP
   // linkingDesc.addNode(edm::PluginDescription<LinkingAlgoFactory>("type", "LinkingAlgoByDirectionGeometric", true));
-  linkingDesc.addNode(edm::PluginDescription<LinkingAlgoFactory>("type", "LinkingAlgoByGNN", true));
+  linkingDesc.addNode(edm::PluginDescription<LinkingAlgoFactory>("type", "LinkingAlgoByMLP", true));
   desc.add<edm::ParameterSetDescription>("linkingPSet", linkingDesc);
 
   desc.add<edm::InputTag>("trackstersclue3d", edm::InputTag("ticlTrackstersCLUE3DHigh"));
@@ -691,8 +691,8 @@ void TrackstersMergeProducer::fillDescriptions(edm::ConfigurationDescriptions &d
   desc.add<int>("eid_n_layers", 50);
   desc.add<int>("eid_n_clusters", 10);
   desc.add<edm::FileInPath>("model_path",
-                            edm::FileInPath("RecoHGCal/TICL/data/tf_models/gnn_model_double_pions.onnx"));
-                            //edm::FileInPath("RecoHGCal/TICL/data/tf_models/mlp_model_double_pions.onnx"));
+                            //edm::FileInPath("RecoHGCal/TICL/data/tf_models/gnn_model_double_pions.onnx"));
+                            edm::FileInPath("RecoHGCal/TICL/data/tf_models/mlp_model_double_pions.onnx"));
                             //edm::FileInPath("RecoHGCal/TICL/data/tf_models/model_with_std.onnx")); // -- old
   descriptions.add("trackstersMergeProducer", desc);
 }

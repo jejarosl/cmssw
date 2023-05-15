@@ -306,13 +306,21 @@ void LinkingAlgoByGNN::linkTracksters(const edm::Handle<std::vector<reco::Track>
   
       // size and energy
       if (DEBUG == 1){
-        std::cout << "Size: " << ts.vertices().size() << std::endl;
+        std::cout << "Num LCs: " << ts.vertices().size() << std::endl;
+        std::cout << "Num hits: " << ts.vertices().size() << std::endl;
         std::cout << "Raw Energy: " << ts.raw_energy() << std::endl;
         std::cout << "Raw EM Energy: " << ts.raw_em_energy() << std::endl;
-        std::cout << "Length: " << length << std::endl;
+        std::cout << "Length z layers: " << length << std::endl;
         std::cout << "Min Z: " << min_z_lc.z() << std::endl;
         std::cout << "Max Z: " << max_z_lc.z() << std::endl;
         std::cout << "Time: " << ts.time() << std::endl;
+        
+        std::cout << "prob photon: " << ts.id_probabilities(0) << std::endl;
+        std::cout << "prob electrin: " << ts.id_probabilities(1) << std::endl;
+        std::cout << "prob muon: " << ts.id_probabilities(2) << std::endl;
+        std::cout << "prob neutral pion: " << ts.id_probabilities(3) << std::endl;
+        std::cout << "prob charged hadr: " << ts.id_probabilities(4) << std::endl;
+        std::cout << "prob neutral hadr: " << ts.id_probabilities(5) << std::endl;
       }
       
 
