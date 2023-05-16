@@ -132,7 +132,8 @@ void LinkingAlgoByGNN::linkTracksters(const edm::Handle<std::vector<reco::Track>
                                                      const ONNXRuntime *cache)  {
   std::cout << "Linking Algo by GNN" << std::endl;
   // GNN input names
-  const std::vector<std::string> input_names = {"features", "edge_index", "SRC", "DST", "edge_features"};
+  //const std::vector<std::string> input_names = {"features", "edge_index", "SRC", "DST", "edge_features"};
+  const std::vector<std::string> input_names = {"features", "edge_index", "edge_features"};
   // Array of data to be filled as a network input. Should be a float array of flattened values.
   FloatArrays data;
   // Network input shapes.
@@ -557,7 +558,7 @@ void LinkingAlgoByGNN::linkTracksters(const edm::Handle<std::vector<reco::Track>
       data.back().push_back(dst);
     }
   
-    
+    /*
     // Creating Adjacency matrix and trackster index
     std::vector<float> A;
     std::vector<float> trackster_index;
@@ -598,13 +599,13 @@ void LinkingAlgoByGNN::linkTracksters(const edm::Handle<std::vector<reco::Track>
     data.emplace_back(A);
     input_shapes.push_back({1, 2*numEdges + N, N});
     data.emplace_back(trackster_index);
-    
-    input_shapes.push_back({1, numEdges, num_edge_features});
-    data.emplace_back(edge_features);
-    
     if (DEBUG == 1){
       std::cout << "Adj size: " << A.size() << std::endl;
     }
+    */
+    
+    input_shapes.push_back({1, numEdges, num_edge_features});
+    data.emplace_back(edge_features);
    
     std::vector<float> edge_predictions = cache->run(input_names, data, input_shapes)[0];
   
