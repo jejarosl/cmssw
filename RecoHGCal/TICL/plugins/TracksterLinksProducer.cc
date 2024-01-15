@@ -14,6 +14,7 @@
 #include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
 #include "FWCore/Framework/interface/ConsumesCollector.h"
 
+#include "PhysicsTools/ONNXRuntime/interface/ONNXRuntime.h"
 
 #include "DataFormats/Common/interface/OrphanHandle.h"
 
@@ -33,10 +34,11 @@
 
 
 using namespace ticl;
+using cms::Ort::ONNXRuntime;
 
-class TracksterLinksProducer : public edm::stream::EDProducer<> {
+class TracksterLinksProducer : public edm::stream::EDProducer<edm::GlobalCache<ONNXRuntime>> {
 public:
-  explicit TracksterLinksProducer(const edm::ParameterSet &ps);
+  explicit TracksterLinksProducer(const edm::ParameterSet &ps, const ONNXRuntime *);
   ~TracksterLinksProducer() override{};
   void produce(edm::Event &, const edm::EventSetup &) override;
   static void fillDescriptions(edm::ConfigurationDescriptions &descriptions);
@@ -45,6 +47,8 @@ public:
   void endJob();
 
   void beginRun(edm::Run const &iEvent, edm::EventSetup const &es) override;
+  static std::unique_ptr<ONNXRuntime> initializeGlobalCache(const edm::ParameterSet &iConfig);
+  static void globalEndJob(const ONNXRuntime *);
 
 private:
 
@@ -64,7 +68,7 @@ private:
   hgcal::RecHitTools rhtools_;
 };
 
-TracksterLinksProducer::TracksterLinksProducer(const edm::ParameterSet &ps)
+TracksterLinksProducer::TracksterLinksProducer(const edm::ParameterSet &ps, const ONNXRuntime *onnxRuntime)
     : clusters_token_(consumes<std::vector<reco::CaloCluster>>(ps.getParameter<edm::InputTag>("layer_clusters"))),
       clustersTime_token_(
           consumes<edm::ValueMap<std::pair<float, float>>>(ps.getParameter<edm::InputTag>("layer_clustersTime"))),
@@ -89,12 +93,22 @@ TracksterLinksProducer::TracksterLinksProducer(const edm::ParameterSet &ps)
 
   auto linkingPSet = ps.getParameter<edm::ParameterSet>("linkingPSet");
   auto algoType = linkingPSet.getParameter<std::string>("type");
-  linkingAlgo_ = TracksterLinkingPluginFactory::get()->create(algoType, linkingPSet, consumesCollector());
+  linkingAlgo_ = TracksterLinkingPluginFactory::get()->create(algoType, linkingPSet, consumesCollector(), onnxRuntime);
+}
+
+std::unique_ptr<ONNXRuntime> TracksterLinksProducer::initializeGlobalCache(const edm::ParameterSet &iConfig) {
+  auto const& pluginPset = iConfig.getParameter<edm::ParameterSet>("linkingPSet");
+  if (pluginPset.exists("onnxModelPath"))
+    return std::make_unique<ONNXRuntime>(pluginPset.getParameter<edm::FileInPath>("onnxModelPath").fullPath());
+  else
+    return std::unique_ptr<ONNXRuntime>(nullptr);
 }
 
 void TracksterLinksProducer::beginJob() {}
 
 void TracksterLinksProducer::endJob(){};
+
+void TracksterLinksProducer::globalEndJob(const ONNXRuntime *cache) {}
 
 void TracksterLinksProducer::beginRun(edm::Run const &iEvent, edm::EventSetup const &es) {
   edm::ESHandle<CaloGeometry> geom = es.getHandle(geometry_token_);
