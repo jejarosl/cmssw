@@ -22,7 +22,7 @@ namespace ticl {
                         std::vector<std::vector<unsigned int>>& linkedTracksterIdToInputTracksterId) override;
     
    private:
-      const std::string nnVersion_;  // Version identifier of the NN (either CNN or a GNN, to choose which inputs to use)
+      std::string nnVersion_;  // Version identifier of the NN (either CNN or a GNN, to choose which inputs to use)
       double nnWorkingPoint_;  // Working point for neural network (above this score, consider the trackster candidate for superclustering)
       double deltaEtaWindow_;            // Delta eta window to consider trackster seed-candidate pairs for inference
       double deltaPhiWindow_;            // Delta phi window
