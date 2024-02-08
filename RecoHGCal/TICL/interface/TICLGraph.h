@@ -1,9 +1,10 @@
-#ifndef DataFormats_HGCalReco_TICLGraph_h
-#define DataFormats_HGCalReco_TICLGraph_h
+#ifndef RecoHGCal_TICL_interface_TICLGraph_h
+#define RecoHGCal_TICL_interface_TICLGraph_h
 
 #include "DataFormats/HGCalReco/interface/Trackster.h"
 #include "DataFormats/TrackReco/interface/Track.h"
 #include <unordered_set>
+#include <vector>
 
 class Node {
 public:
@@ -12,25 +13,44 @@ public:
   
   void addInner(unsigned int trackster_id) { innerNodes_.push_back(trackster_id); addNeighbour(trackster_id);}
   void addOuter(unsigned int trackster_id) { outerNodes_.push_back(trackster_id); addNeighbour(trackster_id);}
-  void addNeighbour(unsigned int trackster_id) {
+  void addNeighbour(unsigned int trackster_id, double weight = 0.0) {
     neighboursId_.push_back(trackster_id);
+    weights_.push_back(weight);
   }
+  void updateWeight(unsigned int neighborIndex, float weight) {
+        // Find the neighbor index in the list of neighbors
+        auto it = std::find(neighboursId_.begin(), neighboursId_.end(), neighborIndex);
+        if (it != neighboursId_.end()) {
+            // Update the weight if the neighbor is found
+            size_t index = std::distance(neighboursId_.begin(), it);
+            weights_[index] = weight;
+        }
+    }
+  
 
   const unsigned int getId() const { return index_; }
   std::vector<unsigned int> getNeighbours() const { return neighboursId_; }
+  std::vector<float> getWeights() const { return weights_; }
   std::vector<unsigned int> getInner() const { return innerNodes_; }
   std::vector<unsigned int> getOuter() const { return outerNodes_; }
   
-  void findSubComponents(std::vector<Node>& graph, std::vector<unsigned int>& subComponent, std::string tabs) {
-    tabs += "\t";
+  void findSubComponents(std::vector<Node>& graph, std::vector<unsigned int>& subComponent, float threshold) {
     if (!alreadyVisited_) {
-//      std::cout << tabs << " Visiting node " << index_ << std::endl;
       alreadyVisited_ = true;
       subComponent.push_back(index_);
-
-      for (auto const& neighbour : neighboursId_) {
-        //std::cout << tabs << " Trying to visit " << neighbour << std::endl;
-        graph[neighbour].findSubComponents(graph, subComponent, tabs);
+      
+      // Using a const iterator since we don't intend to modify elements
+      auto neighbourIt = neighboursId_.cbegin(); // Iterator for neighboursId_
+      auto weightIt = weights_.cbegin(); // Iterator for weights_
+      
+      // Loop through both vectors simultaneously
+      for (; neighbourIt != neighboursId_.cend() && weightIt != weights_.cend(); ++neighbourIt, ++weightIt) {
+          int neighbour = *neighbourIt;
+          double weight = *weightIt;
+          
+          if (weight >= threshold){
+            graph[neighbour].findSubComponents(graph, subComponent, threshold);
+          }
       }
     }
   }
@@ -42,6 +62,7 @@ private:
   bool isTrackster_;
 
   std::vector<unsigned int> neighboursId_;
+  std::vector<float> weights_;
   std::vector<unsigned int> innerNodes_;
   std::vector<unsigned int> outerNodes_;
   bool alreadyVisited_;
@@ -53,24 +74,30 @@ private:
 class TICLGraph {
 public:
   TICLGraph() = default;
-  TICLGraph(std::vector<Node>& n, std::vector<int> isRootNode) {
-    nodes_ = n;
-    isRootNode_ = isRootNode;
-  };
   TICLGraph(std::vector<Node> &n) { nodes_ = n; };
   
   const std::vector<Node>& getNodes() const { return nodes_; }
   const Node& getNode(int i) const { return nodes_[i]; }
+  
+  void setEdgeWeight(unsigned int nodeIndexI, unsigned int nodeIndexJ, float weight) {
+        // Check if the node indices are valid
+        if (nodeIndexI >= nodes_.size() || nodeIndexJ >= nodes_.size()) {
+            // Handle invalid node indices
+            return;
+        }
+        // Update the weight for the edge between node i and node j
+        nodes_[nodeIndexI].updateWeight(nodeIndexJ, weight);
+        // If j is bidirectionally connected, update the weight for j -> i as well
+        nodes_[nodeIndexJ].updateWeight(nodeIndexI, weight);
+  }
 
-  std::vector<std::vector<unsigned int>> findSubComponents() {
+  std::vector<std::vector<unsigned int>> findSubComponents(float threshold) {
     std::vector<std::vector<unsigned int>> components;
     for (auto const& node: nodes_) {
       auto const id = node.getId();
-      if(isRootNode_[id]){
-        //std::cout << "DFS Starting From " << id << std::endl;
-        std::string tabs = "\t";
-        std::vector<unsigned int> tmpSubComponents;
-        nodes_[id].findSubComponents(nodes_, tmpSubComponents, tabs);
+      std::vector<unsigned int> tmpSubComponents;
+      nodes_[id].findSubComponents(nodes_, tmpSubComponents, threshold);
+      if (!tmpSubComponents.empty()) {
         components.push_back(tmpSubComponents);
       }
     }
@@ -109,7 +136,6 @@ public:
 
 private:
   std::vector<Node> nodes_;
-  std::vector<int> isRootNode_;
 };
 
 #endif

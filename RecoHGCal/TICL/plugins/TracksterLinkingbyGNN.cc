@@ -1,277 +1,73 @@
-// Author : Jekaterina Jaroslavceva - jejarosl@cern.ch
-// Date : 01/2024
+// Author: Jekaterina Jaroslavceva - jejarosl@cern.ch
+// Date: January 2024
+
 /*
-TICL plugin for graph neural network-based superclustering in HGCAL, primarily focusing on hadronic interactions.
-DNN designed and trained by Jekaterina Jaroslavceva.
+This TICL plugin implements a graph neural network(and MLP)-based trackster linking algorithm designed and trained by Jekaterina Jaroslavceva. The algorithm is tailored for hadronic interactions in HGCAL.
 
-Inputs are CLUE3D tracksters. Outputs are superclusters (as vectors of IDs of trackster).
+Inputs:
+- CLUE3D tracksters.
 
-Algorithm description :
-#TODO
+Outputs:
+- Superclusters represented as vectors of trackster IDs.
+
+Algorithm Description:
+The plugin implements an inference of the graph neural network (GNN) (or potentially, an MLP algorithm) for superclustering tracksters in the HGCAL detector. The process involves the following steps:
+
+1. Construction of a TICLGraph object representing the spatial relationships between tracksters.
+2. Feature extraction from tracksters including their barycenters, eigenvalues, sigmas, energies, and time information.
+3. Generation of edge features such as energy differences, spatial and temporal compatibilities between tracksters.
+4. Prediction of trackster connections using the GNN model trained for this purpose.
+5. Identification of connected components using depth-first search (DFS) on the predicted graph.
+6. Assembly of superclusters by merging tracksters within each connected component.
+
+Parameters:
+- nnVersion: A tag indicating the version of the DNN model used for trackster linking.
+- nnWorkingPoint: The threshold score for considering a trackster pair as connected.
+- deltaEtaWindow: The size of the delta eta window used to filter candidate pairs for superclustering.
+- deltaPhiWindow: The size of the delta phi window used to filter candidate pairs for superclustering.
 */
 
-#include <map>
-#include <list>
+#include <unordered_map>
+#include <vector>
+#include <string>
 
-#include "RecoHGCal/TICL/interface/TracksterLinkingAlgoBase.h"
 #include "RecoHGCal/TICL/interface/TICLGraph.h"
 #include "DataFormats/Math/interface/deltaR.h"
 #include "RecoHGCal/TICL/plugins/TracksterLinkingbyGNN.h"
-#include "DataFormats/HGCalReco/interface/TICLLayerTile.h"
+#include "RecoHGCal/TICL/interface/GNNUtils.h"
+#include "FWCore/MessageLogger/interface/MessageLogger.h"
 
 using namespace ticl;
+// Define constants for feature shapes
+const int FEATURE_SHAPE_GNN_V1 = 28;
+const int FEATURE_SHAPE_MLP = 30;
+const int NUM_EDGE_FEATURES = 7;
 
-std::vector<float> calculate_dist(const std::vector<std::vector<float>> &lcs_i, const std::vector<std::vector<float>> &lcs_j)
-{
-    std::vector<float> dists;
-
-    for (const auto &point_i : lcs_i)
-    {
-        float x_i = point_i[0];
-        float y_i = point_i[1];
-        float z_i = point_i[2];
-
-        for (const auto &point_j : lcs_j)
-        {
-            float x_j = point_j[0];
-            float y_j = point_j[1];
-            float z_j = point_j[2];
-
-            float distance = std::sqrt(std::pow((x_i - x_j), 2) + std::pow((y_i - y_j), 2) + std::pow((z_i - z_j), 2));
-            dists.push_back(distance);
-        }
-    }
-
-    return dists;
-}
-
-// Graph search of connected components, as a post-processing of the network output
-class Graph
-{
-    // A function used by DFS
-    void DFSUtil(int v);
-
-public:
-    std::map<int, bool> visited;
-    std::map<int, std::list<int>> adj;
-    std::vector<std::vector<int>> connected_components;
-    // function to add an edge to graph
-    void addEdge(int v, int w);
-
-    // prints DFS traversal of the complete graph
-    void DFS();
+// Define the enum for DNN versions
+enum class DNNVersion {
+    GNN_V1,
+    MLP_EDGE_FEATURES,
+    MLP_NO_EDGE_FEATURES
 };
 
-void Graph::addEdge(int v, int w)
-{
-    adj[v].push_back(w); // Add w to v�s list.
-}
+// Define constants for DNN versions
+std::unordered_map<std::string, DNNVersion> DNN_VERSION_MAP = {
+    {"gnn_v1", DNNVersion::GNN_V1},
+    {"mlp_edge_features", DNNVersion::MLP_EDGE_FEATURES},
+    {"mlp_no_edge_features", DNNVersion::MLP_NO_EDGE_FEATURES}
+};
 
-void Graph::DFSUtil(int v)
-{
-    // Mark the current node as visited and print it
-    visited[v] = true;
+// Define a map to store DNN input configurations
+std::unordered_map<DNNVersion, std::pair<std::vector<std::string>, int>> dnnInputConfigurations = {
+    {DNNVersion::GNN_V1, {{"features", "edge_index", "edge_features"}, FEATURE_SHAPE_GNN_V1}},
+    {DNNVersion::MLP_EDGE_FEATURES, {{"features", "edge_index", "edge_features"}, FEATURE_SHAPE_MLP}},
+    {DNNVersion::MLP_NO_EDGE_FEATURES, {{"features", "edge_index"}, FEATURE_SHAPE_MLP}}
+};
 
-    // Recursion for all the vertices adjacent to this vertex
-    std::list<int>::iterator i;
-    for (auto i = adj[v].begin(); i != adj[v].end(); ++i)
-        if (!visited[*i])
-        {
-            connected_components.back().push_back(*i);
-            // std::cout << "Pushed back " << *i << std::endl;
-            DFSUtil(*i);
-        }
-}
-
-// The function to do DFS traversal. It uses recursive DFSUtil()
-void Graph::DFS()
-{
-    // Call the recursive helper function to print DFS
-    // traversal starting from all vertices one by one
-    for (auto i : adj)
-        if (visited[i.first] == false)
-        {
-            // std::cout << "Emplaced back: " << i.first << std::endl;
-            connected_components.emplace_back(1, i.first); // {i.first}
-            // std::cout << "Starting DFS from node: " << i.first << std::endl;
-            DFSUtil(i.first);
-        }
-}
-
-/*
-std::unique_ptr<TICLGraph> produce_ticl_graph(const MultiVectorManager<Trackster> &tracksters)
-{
-
-    TICLLayerTile tracksterTilePos;
-    TICLLayerTile tracksterTileNeg;
-
-    for (size_t id_t = 0; id_t < tracksters.size(); ++id_t)
-    {
-        auto t = tracksters[id_t];
-        if (t.barycenter().eta() > 0.)
-        {
-            tracksterTilePos.fill(t.barycenter().eta(), t.barycenter().phi(), id_t);
-        }
-        else if (t.barycenter().eta() < 0.)
-        {
-            tracksterTileNeg.fill(t.barycenter().eta(), t.barycenter().phi(), id_t);
-        }
-    }
-
-    std::vector<Node> allNodes;
-
-    for (size_t id_t = 0; id_t < tracksters.size(); ++id_t)
-    {
-        auto t = tracksters[id_t];
-
-        Node tNode(id_t);
-
-        auto bary = t.barycenter();
-        double del = 0.1;
-
-        double eta_min = std::max(abs(bary.eta()) - del, (double)TileConstants::minEta);
-        double eta_max = std::min(abs(bary.eta()) + del, (double)TileConstants::maxEta);
-
-        if (bary.eta() > 0.)
-        {
-            std::array<int, 4> search_box =
-                tracksterTilePos.searchBoxEtaPhi(eta_min, eta_max, bary.phi() - del, bary.phi() + del);
-            if (search_box[2] > search_box[3])
-            {
-                search_box[3] += TileConstants::nPhiBins;
-            }
-
-            for (int eta_i = search_box[0]; eta_i <= search_box[1]; ++eta_i)
-            {
-                for (int phi_i = search_box[2]; phi_i <= search_box[3]; ++phi_i)
-                {
-                    auto &neighbours = tracksterTilePos[tracksterTilePos.globalBin(eta_i, (phi_i % TileConstants::nPhiBins))];
-                    for (auto n : neighbours)
-                    {
-                        if (tracksters[n].barycenter().z() < bary.z())
-                        {
-                            tNode.addInner(n);
-                        }
-                        else if (tracksters[n].barycenter().z() > bary.z())
-                        {
-                            tNode.addOuter(n);
-                        }
-                    }
-                }
-            }
-        }
-
-        else if (bary.eta() < 0.)
-        {
-            std::array<int, 4> search_box =
-                tracksterTileNeg.searchBoxEtaPhi(eta_min, eta_max, bary.phi() - del, bary.phi() + del);
-            if (search_box[2] > search_box[3])
-            {
-                search_box[3] += TileConstants::nPhiBins;
-            }
-
-            for (int eta_i = search_box[0]; eta_i <= search_box[1]; ++eta_i)
-            {
-                for (int phi_i = search_box[2]; phi_i <= search_box[3]; ++phi_i)
-                {
-                    auto &neighbours = tracksterTileNeg[tracksterTileNeg.globalBin(eta_i, (phi_i % TileConstants::nPhiBins))];
-                    for (auto n : neighbours)
-                    {
-                        if (abs(tracksters[n].barycenter().z()) < abs(bary.z()))
-                        {
-                            tNode.addInner(n);
-                        }
-                        else if (abs(tracksters[n].barycenter().z()) > abs(bary.z()))
-                        {
-                            tNode.addOuter(n);
-                        }
-                    }
-                }
-            }
-        }
-        allNodes.push_back(tNode);
-    }
-    return std::make_unique<TICLGraph>(allNodes);
-}
-*/
-
-std::unique_ptr<TICLGraph> produce_ticl_graph(const MultiVectorManager<Trackster> &trackstersclue3d) {
-
-  //std::vector<Trackster> trackstersclue3d_sorted(trackstersclue3d);
-  //std::sort(trackstersclue3d_sorted.begin(), trackstersclue3d_sorted.end(), [](Trackster& t1, Trackster& t2){return t1.barycenter().z() < t2.barycenter().z();});
-
-  TICLLayerTile tracksterTilePos;
-  TICLLayerTile tracksterTileNeg;
-
-  for (size_t id_t = 0; id_t < trackstersclue3d.size(); ++id_t) {
-    auto t = trackstersclue3d[id_t];
-    if (t.barycenter().eta() > 0.) {
-      tracksterTilePos.fill(t.barycenter().eta(), t.barycenter().phi(), id_t);
-    } else if (t.barycenter().eta() < 0.) {
-      tracksterTileNeg.fill(t.barycenter().eta(), t.barycenter().phi(), id_t);
-    }
-  }
-
-  std::vector<Node> allNodes;
-
-  for (size_t id_t = 0; id_t < trackstersclue3d.size(); ++id_t) {
-    auto t = trackstersclue3d[id_t];
-
-    Node tNode(id_t);
-
-    auto bary = t.barycenter();
-    double del = 0.1;
-
-    double eta_min = std::max(abs(bary.eta()) - del, (double)TileConstants::minEta);
-    double eta_max = std::min(abs(bary.eta()) + del, (double)TileConstants::maxEta);
-
-    if (bary.eta() > 0.) {
-      std::array<int, 4> search_box =
-          tracksterTilePos.searchBoxEtaPhi(eta_min, eta_max, bary.phi() - del, bary.phi() + del);
-      if (search_box[2] > search_box[3]) {
-        search_box[3] += TileConstants::nPhiBins;
-      }
-
-      for (int eta_i = search_box[0]; eta_i <= search_box[1]; ++eta_i) {
-        for (int phi_i = search_box[2]; phi_i <= search_box[3]; ++phi_i) {
-          auto &neighbours = tracksterTilePos[tracksterTilePos.globalBin(eta_i, (phi_i % TileConstants::nPhiBins))];
-          for (auto n : neighbours) {
-            if (trackstersclue3d[n].barycenter().z() < bary.z()) {
-              tNode.addInner(n);
-            } else if (trackstersclue3d[n].barycenter().z() > bary.z()) {
-              tNode.addOuter(n);
-            }
-          }
-        }
-      }
-    }
-
-    else if (bary.eta() < 0.) {
-      std::array<int, 4> search_box =
-          tracksterTileNeg.searchBoxEtaPhi(eta_min, eta_max, bary.phi() - del, bary.phi() + del);
-      if (search_box[2] > search_box[3]) {
-        search_box[3] += TileConstants::nPhiBins;
-      }
-
-      for (int eta_i = search_box[0]; eta_i <= search_box[1]; ++eta_i) {
-        for (int phi_i = search_box[2]; phi_i <= search_box[3]; ++phi_i) {
-          auto &neighbours = tracksterTileNeg[tracksterTileNeg.globalBin(eta_i, (phi_i % TileConstants::nPhiBins))];
-          for (auto n : neighbours) {
-            if (abs(trackstersclue3d[n].barycenter().z()) < abs(bary.z())) {
-              tNode.addInner(n);
-            } else if (abs(trackstersclue3d[n].barycenter().z()) > abs(bary.z())) {
-              tNode.addOuter(n);
-            }
-          }
-        }
-      }
-    }
-    allNodes.push_back(tNode);
-  }
-  auto resultGraph = std::make_unique<TICLGraph>(allNodes);
-
-  return resultGraph;
-}
+void TracksterLinkingbyGNN::initialize(const HGCalDDDConstants *hgcons,
+                                             const hgcal::RecHitTools rhtools,
+                                             const edm::ESHandle<MagneticField> bfieldH,
+                                             const edm::ESHandle<Propagator> propH) {};
 
 TracksterLinkingbyGNN::TracksterLinkingbyGNN(const edm::ParameterSet &ps, edm::ConsumesCollector iC, cms::Ort::ONNXRuntime const *onnxRuntime)
     : TracksterLinkingAlgoBase(ps, iC, onnxRuntime),
@@ -284,59 +80,67 @@ TracksterLinkingbyGNN::TracksterLinkingbyGNN(const edm::ParameterSet &ps, edm::C
 }
 
 /**
- * resultTracksters : should be all tracksters (including those not in Superclusters (SC)).
- * outputSuperclusters : indices into resultsTracksters. Should include tracksters not in SC as one-element vectors.
+ * resultTracksters : all tracksters (including those not in Superclusters (SC)).
+ * outputSuperclusters : indices into resultsTracksters. Include tracksters not in SC as one-element vectors.
  * linkedTracksterIdToInputTracksterId : map indices from output to input.
  */
 void TracksterLinkingbyGNN::linkTracksters(const Inputs &input, std::vector<Trackster> &resultTracksters,
                                            std::vector<std::vector<unsigned int>> &outputSuperclusters,
                                            std::vector<std::vector<unsigned int>> &linkedTracksterIdToInputTracksterId)
 {
-
-    std::cout << "Linking Algo by GNN" << std::endl;
-
+    LogDebug("HGCalTICLSuperclustering") << "Linking Algo by " << nnVersion_ << std::endl;
     // Create trackster graph
-    auto TICL_graph_result = produce_ticl_graph(input.tracksters);
+    auto TICL_graph_result = produce_ticl_graph(input.tracksters, deltaEtaWindow_, deltaPhiWindow_);
 
     // Access the TICLGraph object through the unique pointer
     TICLGraph *ticlGraph = TICL_graph_result.get();
 
-    // GNN input names
-    // const std::vector<std::string> input_names = {"features", "edge_index", "SRC", "DST", "edge_features"};
-    const std::vector<std::string> input_names = {"features", "edge_index", "edge_features"};
+    // Access the corresponding DNNVersion enum
+    DNNVersion versionEnum = DNN_VERSION_MAP[nnVersion_];
+
+    // Access the input configuration based on the DNN version
+    std::vector<std::string> input_names;
+    int shapeFeatures;
+
+    auto dnnConfig = dnnInputConfigurations.find(versionEnum);
+    if (dnnConfig != dnnInputConfigurations.end()) {
+        // Valid DNN version found, retrieve input names and shape features
+        input_names = dnnConfig->second.first;
+        shapeFeatures = dnnConfig->second.second;
+    } else {
+        // Invalid DNN version
+        edm::LogError("HGCalTICL_TracksterLinkingByGNN") << "Architecture not defined: " << nnVersion_ ;
+        return;
+    }
+    
+    // Print the retrieved input configuration
+    std::cout << "Input names:";
+    for (const auto& name : input_names) {
+        std::cout << " " << name;
+    }
+    std::cout << std::endl;
+    std::cout << "Shape of features: " << shapeFeatures << std::endl;
+    
     // Array of data to be filled as a network input. Should be a float array of flattened values.
     cms::Ort::FloatArrays data;
     // Network input shapes.
     std::vector<std::vector<int64_t>> input_shapes;
-    // Network feature shape.
-    const auto shapeFeatures = 28;
-    const auto num_edge_features = 7;
-
-    // DEBUG mode if 1, otherwise STANDARD mode. Debugging mode prints out the event details.
-    const auto DEBUG = 1;
+    
 
     auto const &tracksters = input.tracksters;
     auto const &layerClusters = input.layerClusters;
     long int N = input.tracksters.size();
 
-    if (DEBUG == 1)
-    {
-        // Print out info about tracksters
-        std::cout << "Number of tracksters in event: " << N << std::endl;
-    }
+    LogDebug("HGCalTICL_TracksterLinkingByGNN") << "Number of tracksters in event: " << N << std::endl;
 
-    if (N < 2)
-    {
+    if (N < 2) {
         // do not run the network - return the original tracksters
-        if (DEBUG == 1)
-        {
-            std::cout << "Number of tracksters less than 2 - no linking is done." << std::endl;
-        }
+        LogDebug("HGCalTICL_TracksterLinkingByGNN") << "Number of tracksters less than 2 - no linking is done." << std::endl;
+        
         linkedTracksterIdToInputTracksterId.resize(N);
         std::vector<unsigned int> linkedTracksters;
 
-        for (int trackster_id = 0; trackster_id < N; trackster_id++)
-        {
+        for (int trackster_id = 0; trackster_id < N; trackster_id++) {
             linkedTracksterIdToInputTracksterId[trackster_id].push_back(trackster_id);
             linkedTracksters.push_back(resultTracksters.size());
             resultTracksters.push_back(input.tracksters[trackster_id]);
@@ -347,9 +151,11 @@ void TracksterLinkingbyGNN::linkTracksters(const Inputs &input, std::vector<Trac
 
     std::vector<float> features;
     std::vector<float> edge_features;
+    
+    std::vector<float> node_degrees;
+    std::vector<float> degree_centr;
 
-    for (unsigned i = 0; i < N; ++i)
-    {
+    for (unsigned i = 0; i < N; ++i) {
 
         const auto ts = tracksters[i];
         const Vector &barycenter = ts.barycenter();
@@ -357,39 +163,7 @@ void TracksterLinkingbyGNN::linkTracksters(const Inputs &input, std::vector<Trac
         const std::array<float, 3> eigenvalues = ts.eigenvalues();
         const std::array<float, 3> sigmasPCA = ts.sigmasPCA();
 
-        if (DEBUG == 1)
-        {
-            std::cout << "Trackster " << i << "--------------------" << std::endl;
-            std::cout << "Barycenter X: " << barycenter.x() << std::endl;
-            std::cout << "Barycenter Y: " << barycenter.y() << std::endl;
-            std::cout << "Barycenter Z: " << barycenter.z() << std::endl;
-            
-            std::cout << "Barycenter Y: " << barycenter.eta() << std::endl;
-            std::cout << "Barycenter Z: " << barycenter.phi() << std::endl;
-
-            Vector eigenvector0 = ts.eigenvectors(0);
-            std::cout << "eVector0 X: " << eigenvector0.x() << std::endl;
-            std::cout << "eVector0 Y: " << eigenvector0.y() << std::endl;
-            std::cout << "eVector0 Z: " << eigenvector0.z() << std::endl;
-
-            std::array<float, 3> eigenvalues = ts.eigenvalues();
-            std::cout << "EV1: " << eigenvalues[0] << std::endl;
-            std::cout << "EV2: " << eigenvalues[1] << std::endl;
-            std::cout << "EV3: " << eigenvalues[2] << std::endl;
-
-            std::array<float, 3> sigmasPCA = ts.sigmasPCA();
-            std::cout << "sigmaPCA1: " << sigmasPCA[0] << std::endl;
-            std::cout << "sigmaPCA2: " << sigmasPCA[1] << std::endl;
-            std::cout << "sigmaPCA3: " << sigmasPCA[2] << std::endl;
-
-            // size
-            std::cout << "Size: " << ts.vertices().size() << std::endl;
-            std::cout << "Raw Energy: " << ts.raw_energy() << std::endl;
-            std::cout << "Raw EM Energy: " << ts.raw_em_energy() << std::endl;
-        }
-
         // Get representative points of the trackster
-
         const std::vector<unsigned int> &vertices_indices = ts.vertices();
 
         const auto max_z_lc_it = std::max_element(
@@ -410,8 +184,8 @@ void TracksterLinkingbyGNN::linkTracksters(const Inputs &input, std::vector<Trac
 
         int num_hits = 0;
         std::set<float> lc_z_unique;
-        for (auto &lc_idx : ts.vertices())
-        {
+        
+        for (auto &lc_idx : ts.vertices()) {
             auto lc = layerClusters[lc_idx];
             num_hits += lc.size();
             lc_z_unique.insert(lc.z());
@@ -421,51 +195,31 @@ void TracksterLinkingbyGNN::linkTracksters(const Inputs &input, std::vector<Trac
         const reco::CaloCluster &min_z_lc = layerClusters[*min_z_lc_it];
         const reco::CaloCluster &max_z_lc = layerClusters[*max_z_lc_it];
 
-        // size and energy
-        if (DEBUG == 1)
-        {
-            std::cout << "Num LCs: " << ts.vertices().size() << std::endl;
-            std::cout << "Num hits: " << ts.vertices().size() << std::endl;
-            std::cout << "Raw Energy: " << ts.raw_energy() << std::endl;
-            std::cout << "Raw EM Energy: " << ts.raw_em_energy() << std::endl;
-            std::cout << "Length z layers: " << length << std::endl;
-            std::cout << "Min Z: " << min_z_lc.z() << std::endl;
-            std::cout << "Max Z: " << max_z_lc.z() << std::endl;
-            std::cout << "Time: " << ts.time() << std::endl;
-
-            std::cout << "prob photon: " << ts.id_probabilities(0) << std::endl;
-            std::cout << "prob electrin: " << ts.id_probabilities(1) << std::endl;
-            std::cout << "prob muon: " << ts.id_probabilities(2) << std::endl;
-            std::cout << "prob neutral pion: " << ts.id_probabilities(3) << std::endl;
-            std::cout << "prob charged hadr: " << ts.id_probabilities(4) << std::endl;
-            std::cout << "prob neutral hadr: " << ts.id_probabilities(5) << std::endl;
-        }
-
         // Features
-        features.push_back(barycenter.x()); // 0:  barycenter x
-        features.push_back(barycenter.y()); // 1:  barycenter y
-        features.push_back(barycenter.z()); // 2:  barycenter z
+        features.push_back(barycenter.x());         // 0:  barycenter x
+        features.push_back(barycenter.y());         // 1:  barycenter y
+        features.push_back(barycenter.z());         // 2:  barycenter z
 
-        features.push_back(barycenter.eta()); // 3: trackster_barycenter_eta
-        features.push_back(barycenter.phi()); // 4: trackster_barycenter_phi
+        features.push_back(barycenter.eta());       // 3: trackster_barycenter_eta
+        features.push_back(barycenter.phi());       // 4: trackster_barycenter_phi
 
-        features.push_back(eigenvector0.x()); // 5: eVector0_x
-        features.push_back(eigenvector0.y()); // 6: eVector0_y
-        features.push_back(eigenvector0.z()); // 7: eVector0_z
+        features.push_back(eigenvector0.x());       // 5: eVector0_x
+        features.push_back(eigenvector0.y());       // 6: eVector0_y
+        features.push_back(eigenvector0.z());       // 7: eVector0_z
 
-        features.push_back(eigenvalues[0]); // 8: EV1
-        features.push_back(eigenvalues[1]); // 9: EV2
-        features.push_back(eigenvalues[2]); // 10: EV3
+        features.push_back(eigenvalues[0]);         // 8: EV1
+        features.push_back(eigenvalues[1]);         // 9: EV2
+        features.push_back(eigenvalues[2]);         // 10: EV3
 
-        features.push_back(sigmasPCA[0]); // 11: sigmaPCA1
-        features.push_back(sigmasPCA[1]); // 12: sigmaPCA2
-        features.push_back(sigmasPCA[2]); // 13: sigmaPCA3
+        features.push_back(sigmasPCA[0]);           // 11: sigmaPCA1
+        features.push_back(sigmasPCA[1]);           // 12: sigmaPCA2
+        features.push_back(sigmasPCA[2]);           // 13: sigmaPCA3
 
-        features.push_back(ts.vertices().size()); // 14: number of LCs per trackster
-        features.push_back(num_hits);             // 15: number of hits per trackster
+        features.push_back(ts.vertices().size());   // 14: number of LCs per trackster
+        features.push_back(num_hits);               // 15: number of hits per trackster
 
-        features.push_back(ts.raw_energy());    // 16: raw_energy
-        features.push_back(ts.raw_em_energy()); // 17: raw_em_energy
+        features.push_back(ts.raw_energy());        // 16: raw_energy
+        features.push_back(ts.raw_em_energy());     // 17: raw_em_energy
 
         features.push_back(ts.id_probabilities(0)); // 18: photon probability
         features.push_back(ts.id_probabilities(1)); // 19: electron probability
@@ -474,25 +228,19 @@ void TracksterLinkingbyGNN::linkTracksters(const Inputs &input, std::vector<Trac
         features.push_back(ts.id_probabilities(4)); // 22: charged_hadron probability
         features.push_back(ts.id_probabilities(5)); // 23: neutral_hadron probability
 
-        features.push_back(min_z_lc.z()); // 24: z_min (minimum z of constituent LCs)
-        features.push_back(max_z_lc.z()); // 25: z_max (maximum z of constituent LCs)
-        features.push_back(length);       // 26: trackster length from minimum to maximum element in terms of layers
-
-        features.push_back(ts.time()); // 27: time
-
-        if (DEBUG == 1)
-        {
-            std::cout << "--------------------" << std::endl;
-        }
+        features.push_back(min_z_lc.z());           // 24: z_min (minimum z of constituent LCs)
+        features.push_back(max_z_lc.z());           // 25: z_max (maximum z of constituent LCs)
+        features.push_back(length);                 // 26: trackster length from minimum to maximum element in terms of layers
+        // 27 - will be added later in code (if not a gnn) - node degrees
+        // 28 - will be added later in code (if not a gnn) - degrees centrality
+        features.push_back(ts.time());             // 27(29): time
     }
-
-    input_shapes.push_back({1, N, shapeFeatures});
-    data.emplace_back(features);
 
     std::vector<float> edges_src;
     std::vector<float> edges_dst;
-    for (int i = 0; i < N; i++)
-    {
+    int node_degree_max = 0;
+    
+    for (int i = 0; i < N; i++){
         const auto &ts_i = tracksters[i];
 
         std::vector<float> vertex_energy_i;
@@ -502,17 +250,21 @@ void TracksterLinkingbyGNN::linkTracksters(const Inputs &input, std::vector<Trac
 
         const Vector &eigenvector0_i = ts_i.eigenvectors(0);
 
-        for (auto &lc_idx : ts_i.vertices())
-        {
+        for (auto &lc_idx : ts_i.vertices()){
             auto lc = layerClusters[lc_idx];
             vertex_energy_i.push_back(lc.energy());
             vertex_i_x.push_back(lc.x());
             vertex_i_y.push_back(lc.y());
             vertex_i_z.push_back(lc.z());
         }
+        int node_degree = ticlGraph->getNode(i).getInner().size();
+        node_degrees.push_back(node_degree);
+        
+        if (node_degree > node_degree_max){
+          node_degree_max = node_degree;
+        }
 
-        for (auto &i_neighbour : ticlGraph->getNode(i).getInner())
-        {
+        for (auto &i_neighbour : ticlGraph->getNode(i).getInner()){
 
             const auto &ts_j = tracksters[i_neighbour];
 
@@ -523,8 +275,7 @@ void TracksterLinkingbyGNN::linkTracksters(const Inputs &input, std::vector<Trac
 
             const Vector &eigenvector0_j = ts_j.eigenvectors(0);
 
-            for (auto &lc_idx : ts_j.vertices())
-            {
+            for (auto &lc_idx : ts_j.vertices()){
                 auto lc = layerClusters[lc_idx];
                 vertex_energy_j.push_back(lc.energy());
                 vertex_j_x.push_back(lc.x());
@@ -536,7 +287,6 @@ void TracksterLinkingbyGNN::linkTracksters(const Inputs &input, std::vector<Trac
             edges_src.push_back(static_cast<float>(i_neighbour));
             edges_dst.push_back(static_cast<float>(i));
 
-            // TODO: add edge features
             auto delta_en = std::abs(ts_i.raw_energy() - ts_j.raw_energy());
             auto delta_z = std::abs(ts_i.barycenter().z() - ts_j.barycenter().z());
 
@@ -546,8 +296,7 @@ void TracksterLinkingbyGNN::linkTracksters(const Inputs &input, std::vector<Trac
 
             // Filter vertices based on energy threshold
             std::vector<std::vector<float>> lcs_i;
-            for (int k = 0; k < (int)vertex_energy_i.size(); k++)
-            {
+            for (int k = 0; k < (int)vertex_energy_i.size(); k++){
                 float x = vertex_i_x[k];
                 float y = vertex_i_y[k];
                 float z = vertex_i_z[k];
@@ -557,8 +306,7 @@ void TracksterLinkingbyGNN::linkTracksters(const Inputs &input, std::vector<Trac
             }
 
             std::vector<std::vector<float>> lcs_j;
-            for (int k = 0; k < (int)vertex_energy_j.size(); k++)
-            {
+            for (int k = 0; k < (int)vertex_energy_j.size(); k++){
                 float x = vertex_j_x[k];
                 float y = vertex_j_y[k];
                 float z = vertex_j_z[k];
@@ -591,33 +339,21 @@ void TracksterLinkingbyGNN::linkTracksters(const Inputs &input, std::vector<Trac
             else
                 time_comp = -10.0;
 
-            edge_features.push_back(delta_en);  // 0 - energy_difference
-            edge_features.push_back(delta_z);   // 1 - delta_z
-            edge_features.push_back(min_dist);  // 2 - min_dist
-            edge_features.push_back(max_dist);  // 3 - max_dist
-            edge_features.push_back(delta_r);   // 4 - delta_r
-            edge_features.push_back(prod);      // 5 - spatial_comp
-            edge_features.push_back(time_comp); // 6 - time_comp
-
-            if (DEBUG == 1)
-            {
-                std::cout << "en_diff: " << delta_en << ", delta_z: " << delta_z
-                          << ", min_dist: " << min_dist << ", max_dist: " << max_dist
-                          << ", delta_r: " << delta_r
-                          << ", spatial_comp: " << spatial_comp << ", time_comp: " << time_comp << std::endl;
-            }
+            edge_features.push_back(delta_en);      // 0 - energy_difference
+            edge_features.push_back(delta_z);       // 1 - delta_z
+            edge_features.push_back(min_dist);      // 2 - min_dist
+            edge_features.push_back(max_dist);      // 3 - max_dist
+            edge_features.push_back(delta_r);       // 4 - delta_r
+            edge_features.push_back(spatial_comp);  // 5 - spatial_comp
+            edge_features.push_back(time_comp);     // 6 - time_comp
         }
     }
 
     auto numEdges = static_cast<int>(edges_src.size());
 
-    if (numEdges < 1)
-    {
-        if (DEBUG == 1)
-        {
-            std::cout << "No edges for the event - no linking is done." << std::endl;
-        }
-        // do not run the network - return the original tracksters
+    if (numEdges < 1) {
+        LogDebug("HGCalTICL_TracksterLinkingByGNN") << "No edges for the event - no linking is done." << std::endl;
+        // Do not run the network - return the original tracksters
         linkedTracksterIdToInputTracksterId.resize(N);
         std::vector<unsigned int> linkedTracksters;
 
@@ -630,9 +366,21 @@ void TracksterLinkingbyGNN::linkTracksters(const Inputs &input, std::vector<Trac
         }
         return;
     }
+    
+    // If we use MLP - add additional two featrues
+    if (nnVersion_ == "mlp_edge_features" || nnVersion_ == "mlp_no_edge_features"){
+      auto degrees_centr = countDegree(edges_src, edges_dst, N);
+      for (int i = 0; i < N; i++)
+      {    
+         features.insert(features.begin() + 27 * (i+1), node_degrees[i]/node_degree_max); // 27 - inner node degrees
+         features.insert(features.begin() + 28 * (i+1), degrees_centr[i]); // 28 - degree centrality
+      }
+    }
+    
+    input_shapes.push_back({1, N, shapeFeatures});
+    data.emplace_back(features);
 
     input_shapes.push_back({1, 2, numEdges});
-    // std::cout << "Num edges: " << numEdges << std::endl;
 
     data.emplace_back(edges_src);
     for (auto &dst : edges_dst)
@@ -640,81 +388,34 @@ void TracksterLinkingbyGNN::linkTracksters(const Inputs &input, std::vector<Trac
         data.back().push_back(dst);
     }
 
-    input_shapes.push_back({1, numEdges, num_edge_features});
-    data.emplace_back(edge_features);
+    if (nnVersion_ != "mlp_no_edge_features"){
+      input_shapes.push_back({1, numEdges, NUM_EDGE_FEATURES});
+      data.emplace_back(edge_features);
+    }
     
-    // DEBUGGING!
-
-    std::cout << "Input Names: " << input_names.size() << std::endl;
-    for (const auto& name : input_names) {
-        std::cout << name << std::endl;
-    }
-    std::cout << "Input Shapes: " << input_shapes.size() <<  std::endl;
-    for (const auto& shape : input_shapes) {
-        std::cout << "Shape: [";
-        for (size_t i = 0; i < shape.size(); ++i) {
-            std::cout << shape[i];
-            if (i < shape.size() - 1) {
-                std::cout << ", ";
-            }
-        }
-        std::cout << "]" << std::endl;
-    }
-    std::cout << "Input Data: " << data.size() << std::endl;
-    for (const auto& floatArray : data) {
-        std::cout << "FloatArray: " << floatArray.size() << std::endl;
-    }
-
     std::vector<float> edge_predictions = onnxRuntime_->run(input_names, data, input_shapes)[0];
-
-    if (DEBUG == 1)
-    {
-        std::cout << "Network output shape is " << edge_predictions.size() << std::endl;
-        for (int i = 0; i < static_cast<int>(edge_predictions.size()); i++)
-        {
-            std::cout << "Network output for edge " << data[1][i] << "-" << data[1][numEdges + i]
-                        << " is: " << edge_predictions[i] << std::endl;
-        }
+    
+    LogDebug("HGCalTICL_TracksterLinkingByGNN") << "Network output shape is " << edge_predictions.size() << std::endl;
+    // Update the TICL graph weights
+    for (int i = 0; i < static_cast<int>(edge_predictions.size()); i++){
+            LogDebug("HGCalTICL_TracksterLinkingByGNN") << "Network output for edge " << data[1][i] << "-" << data[1][numEdges + i] << " is: " << edge_predictions[i] << std::endl;
+            ticlGraph->setEdgeWeight(data[1][i], data[1][numEdges + i], edge_predictions[i]);
     }
-
-    // Create a graph
-    Graph g;
-    const auto classification_threshold = 0.94;
-
-    // Self-loop for not connected nodes.
-    for (int i = 0; i < N; i++)
-    {
-        g.addEdge(i, i);
-    }
-    // Building a predicted graph.
-    for (int i = 0; i < numEdges; i++)
-    {
-        if (edge_predictions[i] >= classification_threshold)
-        {
-            auto src = data[1][i];
-            auto dst = data[1][numEdges + i];
-            // Make undirectional
-            g.addEdge(src, dst);
-            g.addEdge(dst, src);
-        }
-    }
-
-    std::cout << "Following Depth First Traversal" << std::endl;
-    std::cout << "Connected components are: " << std::endl;
-    g.DFS();
-
+    
+    auto connected_components = ticlGraph->findSubComponents(nnWorkingPoint_);
+    
+    
     int id = 0;
-
-    linkedTracksterIdToInputTracksterId.resize(g.connected_components.size());
-
-    for (auto &component : g.connected_components)
+    linkedTracksterIdToInputTracksterId.resize(connected_components.size());
+    
+    for (auto &component : connected_components)
     {
         std::vector<unsigned int> linkedTracksters;
         Trackster outTrackster;
-
+      
         for (auto &trackster_id : component)
         {
-            std::cout << "Component " << id << ": trackster id " << trackster_id << std::endl;
+            LogDebug("HGCalTICL_TracksterLinkingByGNN") << "Component " << id << ": trackster id " << trackster_id << std::endl;
             linkedTracksterIdToInputTracksterId[id].push_back(trackster_id);
             outTrackster.mergeTracksters(input.tracksters[trackster_id]);
         }
@@ -724,20 +425,19 @@ void TracksterLinkingbyGNN::linkTracksters(const Inputs &input, std::vector<Trac
         // Store the linked tracksters
         outputSuperclusters.push_back(linkedTracksters);
     }
-    std::cout << "Done." << std::endl;
 }
 
 void TracksterLinkingbyGNN::fillPSetDescription(edm::ParameterSetDescription &desc)
 {
     TracksterLinkingAlgoBase::fillPSetDescription(desc); // adds algo_verbosity
     desc.add<edm::FileInPath>("onnxModelPath", edm::FileInPath("RecoHGCal/TICL/data/tf_models/gnn_linking_model.onnx"))
-        ->setComment("Path to GNN (as ONNX model)"); // gnn_linking_model.onnx, mlp_linking_model.onnx or mlp_linking_model_with_edge_features.onnx
-    desc.add<std::string>("nnVersion", "gnn-v1")
-        ->setComment("GNN version tag.");
-    desc.add<double>("nnWorkingPoint", 0.7)
-        ->setComment("Working point of GNN (in [0, 1]). DNN score above WP will attempt to supercluster.");
+        ->setComment("Path to GNN (as ONNX model)."); // gnn_linking_model.onnx, mlp_linking_model.onnx or mlp_linking_model_with_edge_features.onnx
+    desc.add<std::string>("nnVersion", "gnn_v1") // gnn_v1, mlp_no_edge_features, mlp_edge_features
+        ->setComment("DNN version tag.");
+    desc.add<double>("nnWorkingPoint", 0.95)
+        ->setComment("Working point of the DNN (in [0, 1]). DNN score above WP will attempt to supercluster.");
     desc.add<double>("deltaEtaWindow", 0.1)
-        ->setComment("Size of delta eta window to consider for superclustering. Seed-candidate pairs outside this window are not considered for DNN inference.");
+        ->setComment("Size of delta eta window to consider for superclustering. Candidate pairs outside this window are not considered for DNN inference.");
     desc.add<double>("deltaPhiWindow", 0.5)
-        ->setComment("Size of delta phi window to consider for superclustering. Seed-candidate pairs outside this window are not considered for DNN inference.");
+        ->setComment("Size of delta phi window to consider for superclustering. Candidate pairs outside this window are not considered for DNN inference.");
 }
